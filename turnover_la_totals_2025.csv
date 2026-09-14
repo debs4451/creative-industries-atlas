@@ -1,0 +1,297 @@
+Region,Enterprise Count,Region_1
+Amber Valley,255,East Midlands
+Ashfield,130,East Midlands
+Bassetlaw,200,East Midlands
+Blaby,260,East Midlands
+Bolsover,85,East Midlands
+Boston,30,East Midlands
+Broxtowe,255,East Midlands
+Charnwood,445,East Midlands
+Chesterfield,185,East Midlands
+Derby,575,East Midlands
+Derbyshire Dales,250,East Midlands
+East Lindsey,195,East Midlands
+Erewash,225,East Midlands
+Gedling,225,East Midlands
+Harborough,390,East Midlands
+High Peak,305,East Midlands
+Hinckley and Bosworth,280,East Midlands
+Leicester,790,East Midlands
+Lincoln,150,East Midlands
+Mansfield,125,East Midlands
+Melton,160,East Midlands
+Newark and Sherwood,300,East Midlands
+North East Derbyshire,165,East Midlands
+North Kesteven,200,East Midlands
+North Northamptonshire,805,East Midlands
+North West Leicestershire,265,East Midlands
+Nottingham,735,East Midlands
+Oadby and Wigston,135,East Midlands
+Rushcliffe,495,East Midlands
+Rutland,140,East Midlands
+South Derbyshire,220,East Midlands
+South Holland,130,East Midlands
+South Kesteven,465,East Midlands
+West Lindsey,160,East Midlands
+West Northamptonshire,1485,East Midlands
+Babergh,305,East of England
+Basildon,515,East of England
+Bedford,645,East of England
+Braintree,510,East of England
+Breckland,250,East of England
+Brentwood,435,East of England
+Broadland,320,East of England
+Broxbourne,330,East of England
+Cambridge,860,East of England
+Castle Point,195,East of England
+Central Bedfordshire,1160,East of England
+Chelmsford,865,East of England
+Colchester,710,East of England
+Dacorum,1105,East of England
+East Cambridgeshire,310,East of England
+East Hertfordshire,905,East of England
+East Suffolk,660,East of England
+Epping Forest,660,East of England
+Fenland,130,East of England
+Great Yarmouth,90,East of England
+Harlow,235,East of England
+Hertsmere,1000,East of England
+Huntingdonshire,620,East of England
+Ipswich,340,East of England
+King's Lynn and West Norfolk,285,East of England
+Luton,480,East of England
+Maldon,205,East of England
+Mid Suffolk,335,East of England
+North Hertfordshire,840,East of England
+North Norfolk,235,East of England
+Norwich,565,East of England
+Peterborough,515,East of England
+Rochford,260,East of England
+South Cambridgeshire,945,East of England
+South Norfolk,425,East of England
+Southend-on-Sea,680,East of England
+St Albans,1325,East of England
+Stevenage,365,East of England
+Tendring,265,East of England
+Three Rivers,720,East of England
+Thurrock,320,East of England
+Uttlesford,565,East of England
+Watford,665,East of England
+Welwyn Hatfield,600,East of England
+West Suffolk,585,East of England
+Barking and Dagenham,495,London
+Barnet,3105,London
+Bexley,805,London
+Brent,1955,London
+Bromley,2125,London
+Camden,8490,London
+City of London,2860,London
+Croydon,1970,London
+Ealing,2460,London
+Enfield,1580,London
+Greenwich,1600,London
+Hackney,7575,London
+Hammersmith and Fulham,2575,London
+Haringey,2565,London
+Harrow,1795,London
+Havering,715,London
+Hillingdon,1460,London
+Hounslow,2145,London
+Islington,6105,London
+Kensington and Chelsea,2315,London
+Kingston upon Thames,1345,London
+Lambeth,2910,London
+Lewisham,2260,London
+Merton,1495,London
+Newham,1590,London
+Redbridge,1620,London
+Richmond upon Thames,2695,London
+Southwark,3875,London
+Sutton,1150,London
+Tower Hamlets,3535,London
+Waltham Forest,2120,London
+Wandsworth,2910,London
+Westminster,10390,London
+County Durham,610,North East
+Darlington,180,North East
+Gateshead,410,North East
+Hartlepool,80,North East
+Middlesbrough,205,North East
+Newcastle upon Tyne,890,North East
+North Tyneside,490,North East
+Northumberland,615,North East
+Redcar and Cleveland,115,North East
+South Tyneside,170,North East
+Stockton-on-Tees,325,North East
+Sunderland,285,North East
+Blackburn with Darwen,210,North West
+Blackpool,180,North West
+Bolton,630,North West
+Burnley,110,North West
+Bury,615,North West
+Cheshire East,1795,North West
+Cheshire West and Chester,1135,North West
+Chorley,310,North West
+Cumberland,315,North West
+Fylde,295,North West
+Halton,160,North West
+Hyndburn,70,North West
+Knowsley,145,North West
+Lancaster,280,North West
+Liverpool,1235,North West
+Manchester,2735,North West
+Oldham,390,North West
+Pendle,140,North West
+Preston,310,North West
+Ribble Valley,185,North West
+Rochdale,325,North West
+Rossendale,150,North West
+Salford,865,North West
+Sefton,500,North West
+South Ribble,260,North West
+St. Helens,230,North West
+Stockport,1170,North West
+Tameside,400,North West
+Trafford,1350,North West
+Warrington,670,North West
+West Lancashire,240,North West
+Westmorland and Furness,530,North West
+Wigan,510,North West
+Wirral,600,North West
+Wyre,200,North West
+Adur,235,South East
+Arun,430,South East
+Ashford,575,South East
+Basingstoke and Deane,875,South East
+Bracknell Forest,645,South East
+Brighton and Hove,2835,South East
+Buckinghamshire,4235,South East
+Canterbury,580,South East
+Cherwell,685,South East
+Chichester,730,South East
+Crawley,285,South East
+Dartford,480,South East
+Dover,250,South East
+East Hampshire,755,South East
+Eastbourne,285,South East
+Eastleigh,465,South East
+Elmbridge,1435,South East
+Epsom and Ewell,535,South East
+Fareham,355,South East
+Folkestone and Hythe,345,South East
+Gosport,100,South East
+Gravesham,245,South East
+Guildford,1060,South East
+Hart,645,South East
+Hastings,420,South East
+Havant,320,South East
+Horsham,785,South East
+Isle of Wight,320,South East
+Lewes,540,South East
+Maidstone,620,South East
+Medway,615,South East
+Mid Sussex,870,South East
+Milton Keynes,1870,South East
+Mole Valley,705,South East
+New Forest,685,South East
+Oxford,690,South East
+Portsmouth,465,South East
+Reading,1045,South East
+Reigate and Banstead,875,South East
+Rother,370,South East
+Runnymede,550,South East
+Rushmoor,380,South East
+Sevenoaks,745,South East
+Slough,880,South East
+South Oxfordshire,1065,South East
+Southampton,495,South East
+Spelthorne,635,South East
+Surrey Heath,565,South East
+Swale,335,South East
+Tandridge,525,South East
+Test Valley,530,South East
+Thanet,565,South East
+Tonbridge and Malling,655,South East
+Tunbridge Wells,905,South East
+Vale of White Horse,635,South East
+Waverley,1165,South East
+Wealden,900,South East
+West Berkshire,1020,South East
+West Oxfordshire,735,South East
+Winchester,835,South East
+Windsor and Maidenhead,1365,South East
+Woking,730,South East
+Wokingham,1655,South East
+Worthing,545,South East
+Bath and North East Somerset,1175,South West
+"Bournemouth, Christchurch and Poole",1445,South West
+"Bristol, City of",2685,South West
+Cheltenham,680,South West
+Cornwall,1550,South West
+Cotswold,580,South West
+Dorset,1405,South West
+East Devon,400,South West
+Exeter,415,South West
+Forest of Dean,225,South West
+Gloucester,235,South West
+Isles of Scilly,0,South West
+Mid Devon,205,South West
+North Devon,250,South West
+North Somerset,800,South West
+Plymouth,380,South West
+Somerset,1725,South West
+South Gloucestershire,850,South West
+South Hams,375,South West
+Stroud,635,South West
+Swindon,625,South West
+Teignbridge,360,South West
+Tewkesbury,390,South West
+Torbay,265,South West
+Torridge,120,South West
+West Devon,165,South West
+Wiltshire,2050,South West
+Birmingham,2765,West Midlands
+Bromsgrove,470,West Midlands
+Cannock Chase,160,West Midlands
+Coventry,755,West Midlands
+Dudley,505,West Midlands
+East Staffordshire,255,West Midlands
+"Herefordshire, County of",675,West Midlands
+Lichfield,360,West Midlands
+Malvern Hills,330,West Midlands
+Newcastle-under-Lyme,210,West Midlands
+North Warwickshire,125,West Midlands
+Nuneaton and Bedworth,180,West Midlands
+Redditch,185,West Midlands
+Rugby,440,West Midlands
+Sandwell,395,West Midlands
+Shropshire,860,West Midlands
+Solihull,770,West Midlands
+South Staffordshire,200,West Midlands
+Stafford,330,West Midlands
+Staffordshire Moorlands,165,West Midlands
+Stoke-on-Trent,285,West Midlands
+Stratford-on-Avon,735,West Midlands
+Tamworth,135,West Midlands
+Telford and Wrekin,395,West Midlands
+Walsall,370,West Midlands
+Warwick,910,West Midlands
+Wolverhampton,435,West Midlands
+Worcester,295,West Midlands
+Wychavon,490,West Midlands
+Wyre Forest,225,West Midlands
+Barnsley,325,Yorkshire and the Humber
+Bradford,920,Yorkshire and the Humber
+Calderdale,640,Yorkshire and the Humber
+Doncaster,445,Yorkshire and the Humber
+East Riding of Yorkshire,700,Yorkshire and the Humber
+"Kingston upon Hull, City of",315,Yorkshire and the Humber
+Kirklees,925,Yorkshire and the Humber
+Leeds,2900,Yorkshire and the Humber
+North East Lincolnshire,140,Yorkshire and the Humber
+North Lincolnshire,175,Yorkshire and the Humber
+North Yorkshire,1835,Yorkshire and the Humber
+Rotherham,400,Yorkshire and the Humber
+Sheffield,1615,Yorkshire and the Humber
+Wakefield,605,Yorkshire and the Humber
+York,705,Yorkshire and the Humber
