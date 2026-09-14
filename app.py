@@ -5,7 +5,7 @@ import plotly.express as px
 import streamlit as st
 
 APP_DIR = Path(__file__).resolve().parent
-DATA_DIR = APP_DIR / "data"
+DATA_DIR = APP_DIR
 
 st.set_page_config(
     page_title="Creative Industries Atlas — England, 2025",
