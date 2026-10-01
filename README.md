@@ -1,29 +1,27 @@
-# Creative Industries Atlas — England, 2025
+# Creative Industries Atlas — DSIT-style Streamlit redesign
 
-A single Streamlit website combining three 2025 Nomis views:
-
-- Business Counts
-- Employment Size Bands
-- Enterprise Turnover
+This version combines the supplied Business Counts, Turnover and Employment-size datasets into one interactive UK atlas.
 
 ## Run locally
 
-```bat
-cd /d "C:\path\to\creative_industries_atlas_website"
+```bash
 pip install -r requirements.txt
 streamlit run app.py
 ```
 
-The app opens at `http://localhost:8501` by default.
+## Streamlit Cloud
 
-## Deploy as a public website with Streamlit Community Cloud
+Upload this entire folder to the GitHub repository (keep the `data/` subfolder), then set the app entry point to `app.py`.
 
-1. Create a GitHub repository, e.g. `creative-industries-atlas`.
-2. Upload the entire contents of this folder, including `app.py`, `requirements.txt`, and the `data` folder.
-3. Go to Streamlit Community Cloud and create a new app from that repository.
-4. Set the entrypoint to `app.py`.
-5. Deploy. Streamlit will provide a public `streamlit.app` URL that can be shared with anyone.
+## Main changes
 
-## Data
+- Large Pydeck UK map with hover and click selection
+- DSIT-inspired left-hand exploration controls
+- One app for Business Counts, Turnover profile and Employment-size profile
+- Year and Creative Industries filters
+- UK regions/nations and One Creative North groupings
+- Clicked Local Authority detail panel
+- Plotly composition, ranking and time-trend charts
+- Download of the filtered data
 
-The site covers England only: 296 Local Authority Districts across the nine English regions. Headline region totals use the published Nomis Total enterprise counts where applicable. Detailed turnover and employment-band charts use the rounded banded values supplied by Nomis.
+The app expects the supplied 2025 LTLA TopoJSON and keeps the source terminology for the nine Creative Industries groups.
