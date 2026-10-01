@@ -227,7 +227,7 @@ if measure_choice != "Business counts":
     available_bands = [b for b in config["bands"] if b in set(df_all["Description"])]
     band_choice = st.sidebar.multiselect(
         config["band_label"], available_bands, default=available_bands,
-        format_func=(lambda x: config["band_labels"].get(x, x)) if config["band_labels"] else None,
+        format_func=(lambda x: config["band_labels"].get(x, x)) if config["band_labels"] else str,
     )
 else:
     band_choice = None
