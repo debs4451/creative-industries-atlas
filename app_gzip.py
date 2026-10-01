@@ -157,8 +157,8 @@ def topojson_to_geojson(topology, object_name="ltla"):
 @st.cache_data(show_spinner=False)
 def load_all_data():
     business = pd.read_excel(DATA_DIR / "business_counts.xlsx", sheet_name="fact_long")
-    turnover = pd.read_csv(DATA_DIR / "turnover_fact_long.csv.gz")
-    employment = pd.read_csv(DATA_DIR / "employment_fact_long.csv.gz")
+    turnover = pd.read_csv(DATA_DIR / "turnover_fact_long.csv")
+    employment = pd.read_csv(DATA_DIR / "employment_fact_long.csv")
     turnover_summary = pd.read_csv(DATA_DIR / "turnover_summary.csv")
     employment_summary = pd.read_csv(DATA_DIR / "employment_summary.csv")
     with open(DATA_DIR / "ltla2025.json", "r", encoding="utf-8") as f:
