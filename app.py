@@ -9,7 +9,6 @@ st.set_page_config(
 
 home = st.Page("pages/home.py", title="Home", icon=":material/home:", default=True)
 business = st.Page("pages/business_counts.py", title="Business Counts", icon=":material/domain:")
-employment = st.Page("pages/employment.py", title="Employment", icon=":material/groups:")
 turnover = st.Page("pages/turnover.py", title="Turnover", icon=":material/payments:")
 employment_bands = st.Page(
     "pages/employment_size_bands.py",
@@ -20,7 +19,7 @@ employment_bands = st.Page(
 pg = st.navigation(
     {
         "Creative Industries Atlas": [home],
-        "Indicators": [business, employment, turnover, employment_bands],
+        "Indicators": [business, turnover, employment_bands],
     }
 )
 pg.run()

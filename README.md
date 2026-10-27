@@ -7,7 +7,6 @@ the indicator views separate pages so each page loads only the data it needs.
 
 - Home
 - Business Counts
-- Employment
 - Turnover
 - Employment Size Bands
 
@@ -53,19 +52,7 @@ The Pydeck map tooltip now shows:
 The loader supports the current project filenames and several legacy names.
 It looks in both the repository root and `data/`.
 
-Current known files are supported for Business Counts, Turnover and Employment
-Size Bands.
-
-The **Employment** page is deliberately kept separate from Employment Size
-Bands. It expects a true employment-count fact-long file, for example:
-
-- `data/employment_counts_fact_long.csv.gz`
-- `data/employment_counts_fact_long.csv`
-- `employment_counts_fact_long_2025.csv`
-- `data/employment.xlsx` with a `fact_long` sheet
-
-This prevents enterprise employment-size bands from being accidentally
-presented as employment headcounts.
+Current known files are supported for Business Counts, Turnover and Employment Size Bands.
 
 ## Run
 
@@ -88,3 +75,9 @@ The fact-long files should contain, or be mappable to:
 
 The loader includes a few common aliases such as `Local Authority` → `Location`
 and `Region` → `Region_1`.
+
+
+Geography Countries includes United Kingdom, England, Scotland, Wales and Northern Ireland.
+
+
+For faster map rendering, the app will prefer `data/ltla2025_simplified.geojson` when present.
