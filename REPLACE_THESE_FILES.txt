@@ -1,0 +1,27 @@
+IMPORTANT: replace these files in GitHub together.
+
+Replace/upload:
+- app.py
+- atlas/config.py
+- atlas/data.py
+- atlas/derived.py
+- atlas/employment.py
+- atlas/geography.py
+- atlas/map_utils.py
+- atlas/styles.py
+- atlas/ui.py
+- pages/business_counts.py
+- pages/creative_business_intensity.py
+- pages/creative_industry_growth.py
+- pages/employment.py
+- pages/employment_size_bands.py
+- pages/home.py
+- pages/turnover.py
+- data/business_counts_fact_long.csv.gz
+- data/all_enterprises_by_la_year.csv.gz
+- data/bres_employment_fact_long.csv.gz
+- requirements.txt
+- .streamlit/config.toml
+
+KEEP your existing turnover, employment-size-band and GeoJSON/boundary files in data/.
+Do not upload only the pages/ folder: the new pages and atlas/ modules must be updated together.
