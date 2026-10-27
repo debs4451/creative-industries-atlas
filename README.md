@@ -1,83 +1,90 @@
-# Creative Industries Atlas — multipage Streamlit version
+# Creative Industries Atlas — NOMIS update
 
-This refactor keeps the existing Streamlit + Pydeck + Plotly design but makes
-the indicator views separate pages so each page loads only the data it needs.
+This build keeps the existing multipage Streamlit Atlas and adds the latest NOMIS data supplied on 27 October 2026.
 
-## Pages
+## Navigation
 
 - Home
 - Business Counts
+- Creative Business Intensity
+- Creative Industry Growth
+- Employment
 - Turnover
 - Employment Size Bands
 
-## Geography control
+## New / updated data in this package
 
-Each indicator page has a Geography type selector:
+### Business Counts
+`data/business_counts_fact_long.csv.gz`
 
-1. **Countries**
-   - England
-   - Scotland
-   - Wales
-   - Northern Ireland
-2. **Distinct Areas**
-   - One Creative North
-   - South Central
-3. **Local Authorities**
-   - Individual Local Authorities
+- Source: NOMIS — UK Business Counts, enterprises by industry and employment size band
+- Years: **2010–2026**
+- Geography: **361 UK Local Authorities** on the supplied/current NOMIS geography
+- Creative Industries: **31 SIC 2007 codes**, grouped into 9 Creative Industries groups
+- Employment size band: Total
+- Legal status: Total
 
-South Central uses the supplied 20-LA definition. From 2019 onwards,
-Bournemouth, Poole and Christchurch are treated jointly as
-`Bournemouth, Christchurch and Poole`.
+This replaces the older Business Counts series when both are present because it is first in the dataset candidate list.
 
-## Hover tooltip
+### Creative Business Intensity
+`data/all_enterprises_by_la_year.csv.gz`
 
-The Pydeck map tooltip now shows:
+Calculated as:
 
-- Local Authority
-- Region
-- Geography
-- Year
-- indicator value
+**selected Creative Industries enterprises / all enterprises × 100**
 
-## Performance changes
+The denominator is the all-industry `Column Total` from the same NOMIS UK Business Counts extract, for each Local Authority and year. No live NOMIS/API request is made when the page opens.
 
-- Separate page execution paths
-- `st.cache_data` for each dataset
-- `st.cache_data` for the boundary file
-- No combined `load_all_data()` call
-- Only the active page's dataset is read
+### Creative Industry Growth
+Uses the updated Business Counts series above and therefore supports comparisons through **2026**.
 
-## Data files
+### Employment
+`data/bres_employment_fact_long.csv.gz`
 
-The loader supports the current project filenames and several legacy names.
-It looks in both the repository root and `data/`.
+- Source: NOMIS — Business Register and Employment Survey (BRES), open access
+- Years: **2015–2024**
+- Geography: **350 Great Britain Local Authorities**
+- Measures included: **Employees, Full-time employees, Part-time employees**
+- Creative Industries: the same 31 SIC 2007 codes / 9 groups
 
-Current known files are supported for Business Counts, Turnover and Employment Size Bands.
+BRES does **not** cover Northern Ireland. The Employment page therefore:
 
-## Run
+- supports England, Scotland and Wales;
+- keeps United Kingdom in the common geography menu but clearly warns that this view is Great Britain coverage only;
+- shows an explicit no-data message for Northern Ireland rather than treating missing values as zero.
 
-```bash
-pip install -r requirements.txt
-streamlit run app.py
-```
+Because NOMIS applies disclosure rounding, sums of detailed Full-time + Part-time cells can differ slightly from separately summed Employees.
 
-## Expected core columns
+## Geography controls
 
-The fact-long files should contain, or be mappable to:
+All relevant pages retain:
 
-- `Year`
-- `Value`
-- `Location`
-- `Industry Group`
-- `Description`
-- `Region_1` (or `Region`)
-- `Nation`
+**Countries**
+- United Kingdom
+- England
+- Scotland
+- Wales
+- Northern Ireland
 
-The loader includes a few common aliases such as `Local Authority` → `Location`
-and `Region` → `Region_1`.
+**Distinct Areas**
+- One Creative North
+- South Central
 
+**Local Authorities**
+- individual Local Authorities
 
-Geography Countries includes United Kingdom, England, Scotland, Wales and Northern Ireland.
+South Central uses the current BCP boundary when the source itself is published on current Local Authority geography.
 
+## Existing files to keep in your GitHub `data/` folder
 
-For faster map rendering, the app will prefer `data/ltla2025_simplified.geojson` when present.
+This package includes the three new compact NOMIS files above. Keep your existing files for:
+
+- Turnover
+- Employment Size Bands
+- UK Local Authority GeoJSON / TopoJSON boundary file
+
+The preferred boundary filename remains `data/ltla2025_simplified.geojson` when available, with the existing fallbacks still supported.
+
+## Performance
+
+The large raw NOMIS downloads are **not** parsed by Streamlit. They have been preprocessed into compressed long-format CSV files. Each indicator page loads only the dataset it needs and uses Streamlit caching.
