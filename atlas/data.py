@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 
 import pandas as pd
@@ -76,6 +77,15 @@ def load_dataset(candidates_tuple):
                 df = pd.read_excel(path, sheet_name=sheet or "fact_long")
             else:
                 df = pd.read_csv(path)
+
+            # Older single-year Atlas exports did not contain a Year column.
+            # Infer the year from filenames such as *_2025.csv so those files
+            # continue to work, while true multi-year files keep their Year field.
+            if "Year" not in df.columns:
+                match = re.search(r"(?:19|20)\d{2}", path.name)
+                if match:
+                    df["Year"] = int(match.group(0))
+
             return _normalise_columns(df), str(path.relative_to(APP_DIR))
         except Exception as exc:
             errors.append(f"{relative_path}: {exc}")
@@ -215,7 +225,7 @@ def _prepare_geojson(geojson):
         )
     return geojson
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def load_geojson():
     for relative_path in GEO_CANDIDATES:
         path = _resolve(relative_path)
@@ -228,4 +238,37 @@ def load_geojson():
 
     raise FileNotFoundError(
         "No boundary file found. Looked for: " + ", ".join(GEO_CANDIDATES)
+    )
+
+@st.cache_data(show_spinner=False)
+def load_all_enterprise_totals():
+    """Load the compact NOMIS all-industry enterprise denominator used by intensity."""
+    candidates = [
+        APP_DIR / "data/all_enterprises_by_la_year.csv.gz",
+        APP_DIR / "all_enterprises_by_la_year.csv.gz",
+    ]
+    for path in candidates:
+        if not path.exists():
+            continue
+        df = pd.read_csv(path)
+        required = {"Location", "Year", "All Enterprises"}
+        missing = required - set(df.columns)
+        if missing:
+            raise ValueError(
+                "All-enterprise denominator is missing: " + ", ".join(sorted(missing))
+            )
+        if "Region_1" not in df.columns:
+            df["Region_1"] = ""
+        if "Nation" not in df.columns:
+            df["Nation"] = ""
+        df["Location"] = df["Location"].fillna("").astype(str).str.strip()
+        df["Year"] = pd.to_numeric(df["Year"], errors="coerce").astype("Int64")
+        df["All Enterprises"] = pd.to_numeric(
+            df["All Enterprises"], errors="coerce"
+        ).fillna(0)
+        for col in ["Region_1", "Nation"]:
+            df[col] = df[col].fillna("").astype(str).str.strip()
+        return df, str(path.relative_to(APP_DIR))
+    raise FileNotFoundError(
+        "No all-enterprise denominator file found. Expected data/all_enterprises_by_la_year.csv.gz"
     )

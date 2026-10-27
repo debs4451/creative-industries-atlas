@@ -140,7 +140,7 @@ DATASETS = {
     "business_counts": {
         "page_title": "Business Counts",
         "kicker": "Creative Industries Atlas",
-        "description": "Creative Industries enterprise counts by industry and geography.",
+        "description": "Creative Industries enterprise counts by industry and geography, updated through 2026.",
         "metric_label": "Business count",
         "value_axis": "Enterprises",
         "unit_word": "enterprises",
@@ -148,12 +148,30 @@ DATASETS = {
         "bands": None,
         "band_labels": None,
         "candidates": [
+            ("data/business_counts_fact_long.csv.gz", "csv", None),
             ("business_counts.xlsx", "excel", "fact_long"),
             ("data/business_counts.xlsx", "excel", "fact_long"),
             ("business_counts_fact_long_2025.csv", "csv", None),
             ("data/business_counts_fact_long_2025.csv", "csv", None),
             ("data/business_counts_fact_long.csv", "csv", None),
-            ("data/business_counts_fact_long.csv.gz", "csv", None),
+        ],
+    },
+    "employment": {
+        "page_title": "Employment",
+        "kicker": "Creative Industries Atlas",
+        "description": (
+            "Creative Industries employees from BRES, with full-time and part-time breakdowns. "
+            "BRES covers Great Britain; Northern Ireland is not included in this source."
+        ),
+        "metric_label": "Employees",
+        "value_axis": "Employees",
+        "unit_word": "employees",
+        "band_label": None,
+        "bands": None,
+        "band_labels": None,
+        "candidates": [
+            ("data/bres_employment_fact_long.csv.gz", "csv", None),
+            ("bres_employment_fact_long.csv.gz", "csv", None),
         ],
     },
     "turnover": {

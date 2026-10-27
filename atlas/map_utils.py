@@ -31,32 +31,65 @@ def feature_name(feature):
         value = props.get(key)
         if value:
             return canonical_name(value)
-    # Last-resort search for a property ending in NM.
     for key, value in props.items():
         if str(key).upper().endswith("NM") and value:
             return canonical_name(value)
     return ""
 
 
-def value_to_color(value, vmax):
-    if value is None or pd.isna(value) or float(value) <= 0:
+def value_to_color(value, vmax, zero_is_data=False):
+    if value is None or pd.isna(value):
+        return NO_DATA_COLOR
+    value = float(value)
+    if value <= 0 and not zero_is_data:
         return NO_DATA_COLOR
     if vmax <= 0:
         return list(COLOR_STOPS[0]) + [210]
 
-    t = min(1.0, math.sqrt(float(value) / float(vmax)))
+    value = max(value, 0.0)
+    t = min(1.0, math.sqrt(value / float(vmax)))
     idx = min(len(COLOR_STOPS) - 1, int(t * (len(COLOR_STOPS) - 1)))
     return list(COLOR_STOPS[idx]) + [215]
 
 
-def enrich_geojson(base_geojson, values, year, geography_label, metric_label):
+def diverging_color(value, max_abs):
+    """Muted red for decline, pale neutral around zero, teal for growth."""
+    if value is None or pd.isna(value):
+        return NO_DATA_COLOR
+    value = float(value)
+    if max_abs <= 0:
+        return [225, 232, 233, 215]
+    strength = min(1.0, math.sqrt(abs(value) / float(max_abs)))
+    neutral = (232, 237, 238)
+    target = (24, 115, 132) if value >= 0 else (177, 73, 67)
+    rgb = [
+        int(neutral[i] + strength * (target[i] - neutral[i]))
+        for i in range(3)
+    ]
+    return rgb + [215]
+
+
+def enrich_geojson(
+    base_geojson,
+    values,
+    year,
+    geography_label,
+    metric_label,
+    value_suffix="",
+    value_prefix="",
+    value_decimals=0,
+    color_mode="sequential",
+    zero_is_data=False,
+):
     lookup = (
         values.set_index("MapLocation").to_dict("index")
         if not values.empty
         else {}
     )
-    vmax = float(values["Value"].max()) if not values.empty else 0
     allowed = set(values["MapLocation"]) if not values.empty else set()
+    numeric = pd.to_numeric(values["Value"], errors="coerce") if not values.empty else pd.Series(dtype=float)
+    vmax = float(numeric.max()) if not numeric.dropna().empty else 0
+    max_abs = float(numeric.abs().max()) if not numeric.dropna().empty else 0
 
     features = []
     for feature in base_geojson.get("features", []):
@@ -67,9 +100,13 @@ def enrich_geojson(base_geojson, values, year, geography_label, metric_label):
             continue
 
         row = lookup.get(current_name)
-        value = float(row["Value"]) if row else 0
-        # Reuse the immutable geometry instead of deep-copying thousands of
-        # coordinate pairs on every rerun. Only display properties are rebuilt.
+        value = float(row["Value"]) if row and not pd.isna(row["Value"]) else float("nan")
+        if color_mode == "diverging":
+            fill = diverging_color(value, max_abs)
+        else:
+            fill = value_to_color(value, vmax, zero_is_data=zero_is_data)
+
+        value_display = "—" if pd.isna(value) else f"{value_prefix}{value:,.{int(value_decimals)}f}{value_suffix}"
         props = {
             "_atlas_name": current_name,
             "_atlas_bbox": base_props.get("_atlas_bbox"),
@@ -80,8 +117,8 @@ def enrich_geojson(base_geojson, values, year, geography_label, metric_label):
             "geography": geography_label,
             "metric_label": metric_label,
             "value": value,
-            "value_display": f"{value:,.0f}",
-            "fill_color": value_to_color(value, vmax),
+            "value_display": value_display,
+            "fill_color": fill,
         }
         features.append({
             "type": "Feature",
@@ -107,8 +144,6 @@ def _iter_points(coords):
 
 
 def view_state_for_geojson(geojson):
-    # Boundary bboxes are computed once when the cached GeoJSON is loaded.
-    # This makes zoom calculation O(number of areas), not O(all polygon points).
     bboxes = [
         f.get("properties", {}).get("_atlas_bbox")
         for f in geojson.get("features", [])

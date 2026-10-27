@@ -63,7 +63,17 @@ def filter_geography(
         if geography_value == "One Creative North":
             allowed = {canonical_name(x) for x in OCN_ALL}
         elif geography_value == "South Central":
-            allowed = south_central_names_for_year(year)
+            # New NOMIS extracts use current Local Authority boundaries for the
+            # whole time series, so BCP can appear even in pre-2019 observations.
+            # Prefer the current South Central definition whenever BCP is present
+            # in the supplied data; fall back to legacy Bournemouth/Poole/
+            # Christchurch only for older source structures.
+            present = set(out["_LocationCanonical"].dropna().astype(str))
+            allowed = (
+                {canonical_name(x) for x in SOUTH_CENTRAL_CURRENT}
+                if BCP in present
+                else south_central_names_for_year(year)
+            )
         else:
             allowed = set()
         return out[out["_LocationCanonical"].isin(allowed)].copy()

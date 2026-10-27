@@ -2,109 +2,10 @@ import html
 from pathlib import Path
 
 import pandas as pd
-import plotly.express as px
 import streamlit as st
 
 from .config import DATASETS, INDUSTRY_ORDER
-from .data import load_dataset, load_geojson
-from .geography import (
-    aggregate_for_map,
-    filter_geography,
-    geography_options,
-)
-from .map_utils import build_deck, enrich_geojson
-
-
-def inject_styles():
-    st.markdown(
-        """
-        <style>
-        .block-container {
-            padding: 1rem 1.35rem 2.5rem 1.35rem;
-            max-width: 1800px;
-        }
-        [data-testid="stSidebar"] {
-            border-right: 1px solid #dde3e7;
-        }
-        [data-testid="stSidebar"] .block-container {
-            padding-top: 1rem;
-        }
-        h1 {
-            font-size: 2.0rem !important;
-            letter-spacing: -.02em;
-            margin-bottom: .15rem !important;
-        }
-        h2, h3 { letter-spacing: -.01em; }
-        .atlas-kicker {
-            font-size:.76rem;
-            text-transform:uppercase;
-            letter-spacing:.12em;
-            font-weight:700;
-            color:#50616a;
-            margin-bottom:.15rem;
-        }
-        .atlas-subtitle {
-            font-size:1rem;
-            color:#53636c;
-            margin-bottom:1rem;
-            max-width:950px;
-        }
-        .metric-card {
-            border:1px solid #dfe5e8;
-            border-radius:12px;
-            padding:14px 16px;
-            background:#fff;
-            min-height:92px;
-        }
-        .metric-label {
-            font-size:.76rem;
-            text-transform:uppercase;
-            letter-spacing:.06em;
-            color:#66747c;
-        }
-        .metric-value {
-            font-size:1.55rem;
-            font-weight:700;
-            color:#12262f;
-            margin-top:2px;
-        }
-        .detail-card {
-            border:1px solid #dfe5e8;
-            border-radius:14px;
-            padding:16px 18px;
-            background:#fff;
-        }
-        .detail-title {
-            font-size:1.2rem;
-            font-weight:700;
-            color:#12262f;
-            margin-bottom:.15rem;
-        }
-        .detail-meta {
-            font-size:.88rem;
-            color:#61717a;
-            margin-bottom:.85rem;
-        }
-        .detail-row {
-            display:flex;
-            justify-content:space-between;
-            gap:18px;
-            padding:8px 0;
-            border-top:1px solid #edf0f2;
-            font-size:.92rem;
-        }
-        .detail-row b { color:#12262f; }
-        .small-note { font-size:.82rem; color:#6b7880; }
-        div[data-testid="stDownloadButton"] button { width:100%; }
-        .stPlotlyChart {
-            border:1px solid #edf0f2;
-            border-radius:12px;
-            overflow:hidden;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+from .styles import inject_styles
 
 
 def _data_error_page(config, exc):
@@ -177,6 +78,7 @@ def _filter_before_geography(df, year, industry_choice, band_choice):
 
 
 def _geography_controls(filtered_for_options, year):
+    from .geography import geography_options
     st.sidebar.markdown("---")
     st.sidebar.subheader("Geography")
 
@@ -193,7 +95,7 @@ def _geography_controls(filtered_for_options, year):
 
     if geography_type == "Countries":
         label = "Country"
-        default_index = options.index("England") if "England" in options else 0
+        default_index = options.index("United Kingdom") if "United Kingdom" in options else 0
     elif geography_type == "Distinct Areas":
         label = "Distinct area"
         default_index = 0
@@ -244,6 +146,7 @@ def _safe(value):
 
 @st.fragment
 def _render_map_and_detail(dataset_key, config, map_geojson, la_values, df, year, geography_type, geography_value, data_source, boundary_source):
+    from .map_utils import build_deck
     st.write("")
     map_col, detail_col = st.columns([3.3, 1.15], gap="large")
 
@@ -338,6 +241,12 @@ def _render_map_and_detail(dataset_key, config, map_geojson, la_values, df, year
         )
 
 def render_indicator_page(dataset_key):
+    # Heavy modules are imported only when an indicator page is actually opened.
+    # This keeps the Home page cold start lightweight.
+    from .data import load_dataset, load_geojson
+    from .geography import aggregate_for_map, filter_geography
+    from .map_utils import build_deck, enrich_geojson
+
     inject_styles()
     config = DATASETS[dataset_key]
 
