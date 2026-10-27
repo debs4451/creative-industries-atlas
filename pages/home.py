@@ -25,7 +25,6 @@ c1, c2 = st.columns(2, gap="large")
 with c1:
     st.subheader("Indicators")
     st.page_link("pages/business_counts.py", label="Business Counts", icon="🏢")
-    st.page_link("pages/employment.py", label="Employment", icon="👥")
     st.page_link("pages/turnover.py", label="Turnover", icon="💷")
     st.page_link(
         "pages/employment_size_bands.py",
@@ -38,6 +37,7 @@ with c2:
     st.markdown(
         """
         **Countries**
+        - United Kingdom
         - England
         - Scotland
         - Wales
