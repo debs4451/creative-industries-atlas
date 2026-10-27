@@ -1,3 +1,0 @@
-from atlas.derived import render_business_intensity_page
-
-render_business_intensity_page()
