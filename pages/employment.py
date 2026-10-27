@@ -1,3 +1,3 @@
-from atlas.ui import render_indicator_page
+from atlas.employment import render_employment_page
 
-render_indicator_page("employment")
+render_employment_page()

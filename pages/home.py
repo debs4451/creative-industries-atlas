@@ -1,6 +1,6 @@
 import streamlit as st
 
-from atlas.ui import inject_styles
+from atlas.styles import inject_styles
 
 inject_styles()
 
@@ -25,6 +25,17 @@ c1, c2 = st.columns(2, gap="large")
 with c1:
     st.subheader("Indicators")
     st.page_link("pages/business_counts.py", label="Business Counts", icon="🏢")
+    st.page_link(
+        "pages/creative_business_intensity.py",
+        label="Creative Business Intensity",
+        icon="📊",
+    )
+    st.page_link(
+        "pages/creative_industry_growth.py",
+        label="Creative Industry Growth",
+        icon="📈",
+    )
+    st.page_link("pages/employment.py", label="Employment", icon="👥")
     st.page_link("pages/turnover.py", label="Turnover", icon="💷")
     st.page_link(
         "pages/employment_size_bands.py",
@@ -56,16 +67,23 @@ st.divider()
 st.subheader("How the Atlas works")
 st.markdown(
     """
-    Every indicator page uses the same controls for **Year**, **Creative
-    Industries** and **Geography**. Turnover and Employment Size Bands also
-    include their relevant band filter.
+    Every indicator page uses the same Creative Industries and Geography
+    approach. Turnover and Employment Size Bands also include their relevant
+    band filter.
 
-    Maps use the existing Pydeck design. Hovering over an area now shows the
-    **Local Authority**, **Region**, **Geography**, **Year** and the selected
-    indicator value.
+    **Creative Business Intensity** measures selected Creative Industries
+    enterprises as a percentage of all enterprises in each Local Authority,
+    using the all-industry denominator from the same NOMIS Business Counts extract.
 
-    The app caches data and map boundaries and keeps indicator datasets on
-    separate pages, so opening Turnover does not also load Business Counts or
-    Employment Size Bands.
+    **Creative Industry Growth** compares Creative Industries enterprise counts
+    between two selected years and maps percentage change by Local Authority.
+
+    **Employment** uses NOMIS BRES data for 2015–2024 and shows Employees,
+    Full-time employees and Part-time employees. BRES covers Great Britain,
+    so Northern Ireland is not available on that page.
+
+    Maps use the existing Pydeck design. Hovering over an area shows the
+    **Local Authority**, **Region**, **Geography**, **Year/period** and the
+    selected indicator value.
     """
 )
