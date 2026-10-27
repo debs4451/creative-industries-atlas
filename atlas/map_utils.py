@@ -1,4 +1,3 @@
-import copy
 import math
 
 import pandas as pd
@@ -61,27 +60,34 @@ def enrich_geojson(base_geojson, values, year, geography_label, metric_label):
 
     features = []
     for feature in base_geojson.get("features", []):
-        raw_name = feature_name(feature)
-        current_name = map_boundary_name(raw_name)
+        base_props = feature.get("properties", {})
+        current_name = base_props.get("_atlas_name") or map_boundary_name(feature_name(feature))
 
         if current_name not in allowed:
             continue
 
         row = lookup.get(current_name)
-        nf = copy.deepcopy(feature)
-        props = nf.setdefault("properties", {})
         value = float(row["Value"]) if row else 0
-
-        props["local_authority"] = current_name
-        props["region"] = str(row["Region"]) if row else ""
-        props["nation"] = str(row["Nation"]) if row else ""
-        props["year"] = str(year)
-        props["geography"] = geography_label
-        props["metric_label"] = metric_label
-        props["value"] = value
-        props["value_display"] = f"{value:,.0f}"
-        props["fill_color"] = value_to_color(value, vmax)
-        features.append(nf)
+        # Reuse the immutable geometry instead of deep-copying thousands of
+        # coordinate pairs on every rerun. Only display properties are rebuilt.
+        props = {
+            "_atlas_name": current_name,
+            "_atlas_bbox": base_props.get("_atlas_bbox"),
+            "local_authority": current_name,
+            "region": str(row["Region"]) if row else "",
+            "nation": str(row["Nation"]) if row else "",
+            "year": str(year),
+            "geography": geography_label,
+            "metric_label": metric_label,
+            "value": value,
+            "value_display": f"{value:,.0f}",
+            "fill_color": value_to_color(value, vmax),
+        }
+        features.append({
+            "type": "Feature",
+            "properties": props,
+            "geometry": feature.get("geometry", {}),
+        })
 
     return {"type": "FeatureCollection", "features": features}
 
@@ -101,24 +107,34 @@ def _iter_points(coords):
 
 
 def view_state_for_geojson(geojson):
-    points = []
-    for feature in geojson.get("features", []):
-        points.extend(list(_iter_points(feature.get("geometry", {}).get("coordinates", []))))
+    # Boundary bboxes are computed once when the cached GeoJSON is loaded.
+    # This makes zoom calculation O(number of areas), not O(all polygon points).
+    bboxes = [
+        f.get("properties", {}).get("_atlas_bbox")
+        for f in geojson.get("features", [])
+    ]
+    bboxes = [b for b in bboxes if b and len(b) == 4]
 
-    if not points:
-        return pdk.ViewState(
-            latitude=54.4, longitude=-3.1, zoom=4.65, min_zoom=3.2, max_zoom=12
-        )
+    if bboxes:
+        min_x = min(b[0] for b in bboxes)
+        min_y = min(b[1] for b in bboxes)
+        max_x = max(b[2] for b in bboxes)
+        max_y = max(b[3] for b in bboxes)
+    else:
+        points = []
+        for feature in geojson.get("features", []):
+            points.extend(list(_iter_points(feature.get("geometry", {}).get("coordinates", []))))
+        if not points:
+            return pdk.ViewState(latitude=54.4, longitude=-3.1, zoom=4.65, min_zoom=3.2, max_zoom=12)
+        xs = [p[0] for p in points]
+        ys = [p[1] for p in points]
+        min_x, max_x = min(xs), max(xs)
+        min_y, max_y = min(ys), max(ys)
 
-    xs = [p[0] for p in points]
-    ys = [p[1] for p in points]
-    min_x, max_x = min(xs), max(xs)
-    min_y, max_y = min(ys), max(ys)
     width = max(max_x - min_x, 0.05)
     height = max(max_y - min_y, 0.05)
     span = max(width, height * 0.7)
 
-    # Practical UK-focused approximation for a clean initial fit.
     if span > 8:
         zoom = 4.2
     elif span > 5:

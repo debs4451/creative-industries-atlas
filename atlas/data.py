@@ -5,6 +5,7 @@ import pandas as pd
 import streamlit as st
 
 from .config import APP_DIR, GEO_CANDIDATES
+from .geography import canonical_name, map_boundary_name
 
 
 def _normalise_columns(df: pd.DataFrame) -> pd.DataFrame:
@@ -163,6 +164,57 @@ def topojson_to_geojson(topology, object_name="ltla"):
     return {"type": "FeatureCollection", "features": features}
 
 
+
+def _feature_boundary_name(feature):
+    props = feature.get("properties", {})
+    keys = [
+        "areanm", "LAD25NM", "LTLA25NM", "LAD24NM", "LTLA24NM",
+        "LAD23NM", "LTLA23NM", "name", "NAME",
+    ]
+    for key in keys:
+        value = props.get(key)
+        if value:
+            return map_boundary_name(canonical_name(value))
+    for key, value in props.items():
+        if str(key).upper().endswith("NM") and value:
+            return map_boundary_name(canonical_name(value))
+    return ""
+
+
+def _bounds_from_coords(coords):
+    min_x = min_y = float("inf")
+    max_x = max_y = float("-inf")
+
+    def walk(node):
+        nonlocal min_x, min_y, max_x, max_y
+        if not isinstance(node, list):
+            return
+        if (len(node) >= 2 and isinstance(node[0], (int, float))
+                and isinstance(node[1], (int, float))):
+            x, y = float(node[0]), float(node[1])
+            min_x = min(min_x, x); max_x = max(max_x, x)
+            min_y = min(min_y, y); max_y = max(max_y, y)
+            return
+        for child in node:
+            walk(child)
+
+    walk(coords)
+    if min_x == float("inf"):
+        return None
+    return [min_x, min_y, max_x, max_y]
+
+
+def _prepare_geojson(geojson):
+    # This runs once inside load_geojson's cache. It avoids repeatedly scanning
+    # every polygon coordinate on every Streamlit rerun.
+    for feature in geojson.get("features", []):
+        props = feature.setdefault("properties", {})
+        props["_atlas_name"] = _feature_boundary_name(feature)
+        props["_atlas_bbox"] = _bounds_from_coords(
+            feature.get("geometry", {}).get("coordinates", [])
+        )
+    return geojson
+
 @st.cache_data(show_spinner=False)
 def load_geojson():
     for relative_path in GEO_CANDIDATES:
@@ -172,7 +224,7 @@ def load_geojson():
 
         with open(path, "r", encoding="utf-8") as f:
             raw = json.load(f)
-        return topojson_to_geojson(raw), str(path.relative_to(APP_DIR))
+        return _prepare_geojson(topojson_to_geojson(raw)), str(path.relative_to(APP_DIR))
 
     raise FileNotFoundError(
         "No boundary file found. Looked for: " + ", ".join(GEO_CANDIDATES)

@@ -15,7 +15,7 @@ INDUSTRY_ORDER = [
     "Publishing",
 ]
 
-COUNTRIES = ["England", "Scotland", "Wales", "Northern Ireland"]
+COUNTRIES = ["United Kingdom", "England", "Scotland", "Wales", "Northern Ireland"]
 
 TURNOVER_ORDER = [
     "0 to 49 (thousand)",
@@ -156,26 +156,6 @@ DATASETS = {
             ("data/business_counts_fact_long.csv.gz", "csv", None),
         ],
     },
-    "employment": {
-        "page_title": "Employment",
-        "kicker": "Creative Industries Atlas",
-        "description": "Creative Industries employment by industry and geography.",
-        "metric_label": "Employment",
-        "value_axis": "Employment",
-        "unit_word": "jobs",
-        "band_label": None,
-        "bands": None,
-        "band_labels": None,
-        # Kept deliberately separate from employment-size-band data.
-        "candidates": [
-            ("data/employment_counts_fact_long.csv.gz", "csv", None),
-            ("data/employment_counts_fact_long.csv", "csv", None),
-            ("employment_counts_fact_long_2025.csv", "csv", None),
-            ("data/employment_counts_fact_long_2025.csv", "csv", None),
-            ("data/employment.xlsx", "excel", "fact_long"),
-            ("employment.xlsx", "excel", "fact_long"),
-        ],
-    },
     "turnover": {
         "page_title": "Turnover",
         "kicker": "Creative Industries Atlas",
@@ -218,6 +198,8 @@ DATASETS = {
 }
 
 GEO_CANDIDATES = [
+    "data/ltla2025_simplified.geojson",
+    "ltla2025_simplified.geojson",
     "data/ltla2025.json",
     "ltla2025.json",
     "data/england_lads_2024.geojson",

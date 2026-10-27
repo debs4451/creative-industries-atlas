@@ -48,6 +48,8 @@ def filter_geography(
 
     if geography_type == "Countries":
         target = str(geography_value).strip().casefold()
+        if target in {"united kingdom", "uk", "u.k."}:
+            return out.copy()
         nation = out["Nation"].astype(str).str.strip().str.casefold()
         region = out["Region_1"].astype(str).str.strip().str.casefold()
         # Nation is preferred. Region fallback keeps older Scotland/Wales/NI

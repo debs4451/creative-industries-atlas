@@ -114,13 +114,6 @@ def _data_error_page(config, exc):
     )
     st.title(config["page_title"])
     st.warning(str(exc))
-    if config["page_title"] == "Employment":
-        st.info(
-            "The Employment page is intentionally separate from Employment Size "
-            "Bands so the two measures are not mixed. Add the employment-count "
-            "fact-long file using one of the filenames listed above and this page "
-            "will load it automatically."
-        )
 
 
 def _available_industries(df):
@@ -248,83 +241,9 @@ def _safe(value):
     return html.escape(str(value or ""))
 
 
-def render_indicator_page(dataset_key):
-    inject_styles()
-    config = DATASETS[dataset_key]
 
-    st.sidebar.markdown(
-        "<div class='atlas-kicker'>Creative Industries Atlas</div>",
-        unsafe_allow_html=True,
-    )
-    st.sidebar.title(config["page_title"])
-    st.sidebar.caption(
-        "Change the year, industry and geography. Hover over the map to see the Local Authority and value."
-    )
-
-    try:
-        df_all, data_source = load_dataset(tuple(config["candidates"]))
-        base_geojson, boundary_source = load_geojson()
-    except Exception as exc:
-        _data_error_page(config, exc)
-        return
-
-    year, industry_choice, band_choice = _base_filter_controls(df_all, config)
-    year_filtered = _filter_before_geography(
-        df_all, year, industry_choice, band_choice
-    )
-
-    geography_type, geography_value = _geography_controls(
-        year_filtered, year
-    )
-    if geography_value is None:
-        st.stop()
-
-    df = filter_geography(
-        year_filtered,
-        geography_type,
-        geography_value,
-        year,
-    )
-
-    la_values = aggregate_for_map(df)
-    geography_label = _geography_label(geography_type, geography_value)
-    map_geojson = enrich_geojson(
-        base_geojson,
-        la_values,
-        year,
-        geography_label,
-        config["metric_label"],
-    )
-
-    st.markdown(
-        f"<div class='atlas-kicker'>{_safe(config['kicker'])}</div>",
-        unsafe_allow_html=True,
-    )
-    st.title(config["page_title"])
-    st.markdown(
-        f"<div class='atlas-subtitle'>{_safe(config['description'])}</div>",
-        unsafe_allow_html=True,
-    )
-
-    k1, k2, k3, k4 = st.columns(4)
-    total_value = float(la_values["Value"].sum()) if not la_values.empty else 0
-    kpis = [
-        (config["metric_label"], f"{total_value:,.0f}"),
-        ("Local Authorities shown", f"{la_values['MapLocation'].nunique():,}"),
-        ("Creative sectors", f"{len(industry_choice):,}"),
-        ("Year", str(year)),
-    ]
-    for col, (label, value) in zip((k1, k2, k3, k4), kpis):
-        col.markdown(
-            (
-                "<div class='metric-card'>"
-                f"<div class='metric-label'>{_safe(label)}</div>"
-                f"<div class='metric-value'>{_safe(value)}</div>"
-                "</div>"
-            ),
-            unsafe_allow_html=True,
-        )
-
+@st.fragment
+def _render_map_and_detail(dataset_key, config, map_geojson, la_values, df, year, geography_type, geography_value, data_source, boundary_source):
     st.write("")
     map_col, detail_col = st.columns([3.3, 1.15], gap="large")
 
@@ -417,6 +336,88 @@ def render_indicator_page(dataset_key):
             ),
             unsafe_allow_html=True,
         )
+
+def render_indicator_page(dataset_key):
+    inject_styles()
+    config = DATASETS[dataset_key]
+
+    st.sidebar.markdown(
+        "<div class='atlas-kicker'>Creative Industries Atlas</div>",
+        unsafe_allow_html=True,
+    )
+    st.sidebar.title(config["page_title"])
+    st.sidebar.caption(
+        "Change the year, industry and geography. Hover over the map to see the Local Authority and value."
+    )
+
+    try:
+        df_all, data_source = load_dataset(tuple(config["candidates"]))
+        base_geojson, boundary_source = load_geojson()
+    except Exception as exc:
+        _data_error_page(config, exc)
+        return
+
+    year, industry_choice, band_choice = _base_filter_controls(df_all, config)
+    year_filtered = _filter_before_geography(
+        df_all, year, industry_choice, band_choice
+    )
+
+    geography_type, geography_value = _geography_controls(
+        year_filtered, year
+    )
+    if geography_value is None:
+        st.stop()
+
+    df = filter_geography(
+        year_filtered,
+        geography_type,
+        geography_value,
+        year,
+    )
+
+    la_values = aggregate_for_map(df)
+    geography_label = _geography_label(geography_type, geography_value)
+    map_geojson = enrich_geojson(
+        base_geojson,
+        la_values,
+        year,
+        geography_label,
+        config["metric_label"],
+    )
+
+    st.markdown(
+        f"<div class='atlas-kicker'>{_safe(config['kicker'])}</div>",
+        unsafe_allow_html=True,
+    )
+    st.title(config["page_title"])
+    st.markdown(
+        f"<div class='atlas-subtitle'>{_safe(config['description'])}</div>",
+        unsafe_allow_html=True,
+    )
+
+    k1, k2, k3, k4 = st.columns(4)
+    total_value = float(la_values["Value"].sum()) if not la_values.empty else 0
+    kpis = [
+        (config["metric_label"], f"{total_value:,.0f}"),
+        ("Local Authorities shown", f"{la_values['MapLocation'].nunique():,}"),
+        ("Creative sectors", f"{len(industry_choice):,}"),
+        ("Year", str(year)),
+    ]
+    for col, (label, value) in zip((k1, k2, k3, k4), kpis):
+        col.markdown(
+            (
+                "<div class='metric-card'>"
+                f"<div class='metric-label'>{_safe(label)}</div>"
+                f"<div class='metric-value'>{_safe(value)}</div>"
+                "</div>"
+            ),
+            unsafe_allow_html=True,
+        )
+
+    _render_map_and_detail(
+        dataset_key, config, map_geojson, la_values, df, year,
+        geography_type, geography_value, data_source, boundary_source,
+    )
 
     st.divider()
     st.subheader("Explore the selected geography")
