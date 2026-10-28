@@ -2,6 +2,7 @@ import html
 from pathlib import Path
 
 import pandas as pd
+import plotly.express as px
 import streamlit as st
 
 from .config import DATASETS, INDUSTRY_ORDER

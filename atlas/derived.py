@@ -10,6 +10,7 @@ from .geography import (
     map_boundary_name,
 )
 from .styles import inject_styles
+from .map_utils import enrich_geojson
 
 
 def _safe(value):
