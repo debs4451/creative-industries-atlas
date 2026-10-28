@@ -1,27 +1,19 @@
-IMPORTANT: replace these files in GitHub together.
+CREATIVE INDUSTRIES ATLAS v9 — IMPORTANT UPLOAD INSTRUCTIONS
 
-Replace/upload:
-- app.py
-- atlas/config.py
-- atlas/data.py
-- atlas/derived.py
-- atlas/employment.py
-- atlas/geography.py
-- atlas/map_utils.py
-- atlas/styles.py
-- atlas/ui.py
-- pages/business_counts.py
-- pages/creative_business_intensity.py
-- pages/creative_industry_growth.py
-- pages/employment.py
-- pages/employment_size_bands.py
-- pages/home.py
-- pages/turnover.py
-- data/business_counts_fact_long.csv.gz
-- data/all_enterprises_by_la_year.csv.gz
-- data/bres_employment_fact_long.csv.gz
-- requirements.txt
-- .streamlit/config.toml
+To avoid mixing old and new modules:
 
-KEEP your existing turnover, employment-size-band and GeoJSON/boundary files in data/.
-Do not upload only the pages/ folder: the new pages and atlas/ modules must be updated together.
+1. Replace the ENTIRE atlas/ folder in GitHub with the atlas/ folder in this ZIP.
+2. Replace the ENTIRE pages/ folder with the pages/ folder in this ZIP.
+3. Replace app.py.
+4. Keep your existing data/ files, but make sure these new files are present:
+   - data/business_counts_fact_long.csv.gz
+   - data/all_enterprises_by_la_year.csv.gz
+   - data/bres_employment_fact_long.csv.gz
+5. Keep your existing Turnover, Employment Size Bands, and UK boundary/GeoJSON files.
+6. Replace requirements.txt too.
+
+v9 fixes:
+- Creative Business Intensity: enrich_geojson import fixed.
+- Creative Industry Growth: enrich_geojson import fixed.
+- Employment Size Bands / shared indicator UI: plotly.express (px) import fixed.
+- Employment: direct BRES data loading retained.
