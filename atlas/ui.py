@@ -464,40 +464,5 @@ def render_indicator_page(dataset_key):
         )
         st.plotly_chart(fig_trend, use_container_width=True)
 
-    with st.expander("Methodology and data notes"):
-        st.markdown(
-            """
-            **Geography.** The Geography control is organised into three types:
-            **Countries** (England, Scotland, Wales and Northern Ireland),
-            **Distinct Areas** (One Creative North and South Central), and
-            **Local Authorities**.
-
-            **South Central.** The South Central definition covers the 20 supplied
-            pre-reorganisation Local Authorities. For data from 2019 onwards,
-            Bournemouth, Poole and Christchurch are treated jointly as
-            **Bournemouth, Christchurch and Poole (BCP)**. Historic component
-            values are aggregated to the current BCP map boundary when required
-            for display.
-
-            **One Creative North.** The existing One Creative North Local
-            Authority grouping is retained.
-
-            **Map hover.** Hovering over a Local Authority shows the Local
-            Authority name, region, selected geography, year and indicator value.
-
-            **Current boundaries.** Historical values are displayed against the
-            supplied current Local Authority boundary file.
-            """
-        )
-        if dataset_key == "turnover":
-            st.markdown(
-                "**Turnover.** Values are enterprise counts within turnover bands; "
-                "they are not £ turnover totals."
-            )
-        if dataset_key == "employment_size_bands":
-            st.markdown(
-                "**Employment Size Bands.** Values are enterprise counts within "
-                "employment-size bands; they are not employment headcounts."
-            )
-
+  
     st.caption("Creative Industries Atlas · Streamlit + Pydeck + Plotly")
