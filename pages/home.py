@@ -41,6 +41,7 @@ with c1:
         label="Creative Self-Employment (Census 2021)",
         icon="🧑‍💼",
     )
+    st.page_link("pages/creative_workforce_age.py", label="Creative Workforce by Age (Census 2021)", icon="📅")
     st.page_link("pages/turnover.py", label="Turnover", icon="💷")
     st.page_link(
         "pages/employment_size_bands.py",
@@ -96,6 +97,13 @@ st.markdown(
     and Northern Ireland are not included in this Census extract. We do not
     compare the uploaded 2011 data directly because they are workplace-based
     and use a different SOC classification.
+
+    **Creative Workforce by Age (Census 2021)** uses 4-digit SOC 2020 creative occupations
+    at **workplace** Local Authority level. It shows original Census age-band counts
+    (16–19 through 75+), by occupation and geography. This differs from the
+    **residence-based** Creative Self-Employment page. The source merges the City
+    of London with Westminster and the Isles of Scilly with Cornwall.
+    Scotland and Northern Ireland are outside this Census table's LA coverage.
 
     Maps use the existing Pydeck design. Hovering over an area shows the
     **Local Authority**, **Region**, **Geography**, **Year/period** and the
