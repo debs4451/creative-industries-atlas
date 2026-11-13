@@ -25,6 +25,11 @@ creative_self_employment = st.Page(
     title="Creative Self-Employment (Census 2021)",
     icon=":material/person:",
 )
+creative_workforce_age = st.Page(
+    "pages/creative_workforce_age.py",
+    title="Creative Workforce by Age (Census 2021)",
+    icon=":material/calendar_month:",
+)
 turnover = st.Page("pages/turnover.py", title="Turnover", icon=":material/payments:")
 employment_bands = st.Page(
     "pages/employment_size_bands.py",
@@ -41,6 +46,7 @@ pg = st.navigation(
             growth,
             employment,
             creative_self_employment,
+            creative_workforce_age,
             turnover,
             employment_bands,
         ],

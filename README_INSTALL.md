@@ -1,32 +1,75 @@
-# Creative Self-Employment (Census 2021) — Atlas homepage and page update
+# Add Creative Workforce by Age (Census 2021) to the existing Creative Industries Atlas
 
-This package fixes the missing home-page link and explicitly marks the source as Census 2021. It also removes the final on-page data table and its download button. All maps, three independent employment-category selectors, charts, geographic filters and the methodology expander remain.
+This is an **additive Streamlit + Pydeck page**. It does not modify any of your existing indicator calculations or visualisations.
 
-## Upload to your EXISTING GitHub repository
+## 1) Upload the new files to your GitHub repository
 
-Keep folder paths identical. In https://github.com/debs4451/creative-industries-atlas, replace or add:
+Repo: `https://github.com/debs4451/creative-industries-atlas`
 
-1. `pages/home.py` — adds the new indicator to the **Home > Indicators** list and explains Census 2021.
-2. `atlas/creative_self_employment.py` — new page label and removes the last data table.
-3. `app.py` — registers the new page in the sidebar **Indicators** menu (only necessary if you haven't already registered it).
-4. `pages/creative_self_employment.py` — page loader (already installed if the earlier add-on is working).
-5. `data/creative_self_employment_census2021.csv.gz` — unchanged Census source extract (already installed if earlier add-on works).
-6. `data/creative_soc2020_selection.csv` — unchanged list of 28 selected occupations.
+Copy the contents of the ZIP to the **same relative paths** in your repository:
 
-If your `app.py` has newer custom edits, DON'T overwrite it blindly; make sure it has this page registration and `creative_self_employment` in `st.navigation`:
+| File | Purpose |
+|---|---|
+| `pages/creative_workforce_age.py` | New Streamlit page entrypoint |
+| `atlas/creative_workforce_age.py` | Filters, Pydeck map, age and occupation charts |
+| `data/creative_workforce_age_census2021.csv.gz` | Real ONS Census 2021 age counts, filtered to 28 selected creative SOC codes |
+| `data/creative_soc2020_selection.csv` | The same 28-code selection used for Self-Employment; only replace if your copy is different |
+
+The ZIP also includes ready-edited `app.py` and `pages/home.py` based on the latest Creative Self-Employment homepage update. **If you have made newer edits to these two files, do not overwrite them wholesale.** Apply the changes below instead.
+
+## 2) Register the page in `app.py`
+
+After the `creative_self_employment = st.Page(...)` block, add:
 
 ```python
-creative_self_employment = st.Page(
-    "pages/creative_self_employment.py",
-    title="Creative Self-Employment (Census 2021)",
-    icon=":material/person:",
+creative_workforce_age = st.Page(
+    "pages/creative_workforce_age.py",
+    title="Creative Workforce by Age (Census 2021)",
+    icon=":material/calendar_month:",
 )
 ```
 
-Then insert `creative_self_employment,` immediately after `employment,` in the `"Indicators"` list.
+In the existing `st.navigation(...)` `"Indicators"` list, insert `creative_workforce_age,` immediately after `creative_self_employment,`.
 
-Do not upload this ZIP file as a single file to the repo: extract it, then commit the files under their specified folders. Streamlit Cloud should then redeploy if configured to follow your `main` branch.
+## 3) Add the home-page link
 
-## Scope
+In `pages/home.py`, beneath the Creative Self-Employment link, add:
 
-The measure is **selected creative SOC occupations**, not all employees of the **31 SIC-defined Creative Industries**. The 2021 dataset covers England and Wales, based on area of residence. Scotland and Northern Ireland have no observations in this source. No direct 2011 comparison: the uploaded 2011 source is workplace-based and uses SOC 2010.
+```python
+st.page_link(
+    "pages/creative_workforce_age.py",
+    label="Creative Workforce by Age (Census 2021)",
+    icon="📅",
+)
+```
+
+Optionally add this explanation to the home-page *How the Atlas works* section:
+
+> Creative Workforce by Age (Census 2021) reports workers in selected 4-digit SOC 2020 creative occupations by workplace Local Authority and original age bands. It differs from the residence-based Creative Self-Employment indicator. Scotland and Northern Ireland are outside this England-and-Wales source.
+
+## 4) Check deployment
+
+Commit the files to the branch followed by Streamlit Cloud (usually `main`). Your existing `requirements.txt` should already provide `streamlit`, `pandas`, `plotly` and `pydeck`, since they are used by the current Atlas; no new libraries are required.
+
+Open the Home page. The indicator should appear below Creative Self-Employment. Check Country → England, Distinct Areas → One Creative North and South Central, and Local Authorities → Barnsley.
+
+## Source, definitions and limitations
+
+- **Original data:** ONS Census 2021, commissioned table [CT21_0332 — Workplace table: occupation (4 digits) by age](https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/adhocs/2330ct210332census2021), lower-tier Local Authority (merged).
+- **Workers:** usual residents aged 16+ who were in employment in the week before Census day; geography is the **workplace**, **not home address**.
+- **Occupation definition:** 28 selected 4-digit SOC 2020 occupations carried over from the existing Self-Employment page. They are not equivalent to the 31 SIC-defined Creative Industries businesses, nor claimed to be a complete official DCMS Creative Occupations total.
+- **Original measures:** the ONS total plus **13 distinct age bands**, each preserved separately. No age rates are inserted into the source; the chart derives shares from observed counts when needed.
+- **Geographic coverage:** England and Wales only. A UK selection is visibly marked as partial. No Scotland or Northern Ireland counts are treated as zero.
+- **Merged 2021 source geographies:** Westminster and City of London are combined; Cornwall and Isles of Scilly are combined. Their figures are shown on Westminster and Cornwall, respectively, because their individual contributions cannot be separated. The Atlas's current boundaries are used for display. The 329 source geographies map to 316 current map areas.
+- **Missing source observations:** five combinations of selected SOC codes and original Local Authorities are absent. Their counts are stored as missing (`NaN`), not zero. Maps do not show complete LA totals where one of the selected SOC observations is missing; headline numbers use complete LAs only.
+- **2011 comparison:** deliberately not included. The uploaded 2011 data use SOC 2010 and are not a harmonised 2011 age-by-occupation table. This 2021 workplace series also should not be numerically compared with the residence-based Self-Employment page without aligning definitions.
+- **ONS statistical disclosure control:** small Census counts are perturbed for confidentiality.
+
+## Validation performed here
+
+- Parsed ONS's original `CT21_0332 LTLA merged` worksheet; selected 28 SOC codes.
+- Confirmed **329 source workplace geographies**, **28 SOC codes**, **13 age bands**, and **9,212 rows** in the delivered CSV (including five explicitly empty, unpublished combinations).
+- Matched source authorities to the mapping used in the existing Creative Self-Employment Atlas.
+- Confirmed South Central has **18** current area records and One Creative North **60** current area records.
+- Successfully ran the data filters, geography aggregation, TopoJSON-to-GeoJSON map, chart construction and full page rendering with mocked Streamlit/Pydeck frontends. Python syntax compilation passed.
+- **Not tested on the live Streamlit Cloud deployment.** If a module import fails after deployment, check that the files were uploaded under the exact paths above.
