@@ -36,6 +36,11 @@ with c1:
         icon="📈",
     )
     st.page_link("pages/employment.py", label="Employment", icon="👥")
+    st.page_link(
+        "pages/creative_self_employment.py",
+        label="Creative Self-Employment (Census 2021)",
+        icon="🧑‍💼",
+    )
     st.page_link("pages/turnover.py", label="Turnover", icon="💷")
     st.page_link(
         "pages/employment_size_bands.py",
@@ -81,6 +86,16 @@ st.markdown(
     **Employment** uses NOMIS BRES data for 2015–2024 and shows Employees,
     Full-time employees and Part-time employees. BRES covers Great Britain,
     so Northern Ireland is not available on that page.
+
+    **Creative Self-Employment (Census 2021)** uses 2021 England and Wales
+    Census data on selected creative occupations (4-digit SOC 2020). Its
+    three original categories — Employees, Self-employed with employees, and
+    Self-employed without employees — can be selected separately. These
+    are **residence-based** counts of people in creative occupations and are
+    not directly comparable with workplace-based BRES employment. Scotland
+    and Northern Ireland are not included in this Census extract. We do not
+    compare the uploaded 2011 data directly because they are workplace-based
+    and use a different SOC classification.
 
     Maps use the existing Pydeck design. Hovering over an area shows the
     **Local Authority**, **Region**, **Geography**, **Year/period** and the
