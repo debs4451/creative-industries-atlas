@@ -20,19 +20,17 @@ growth = st.Page(
     icon=":material/trending_up:",
 )
 employment = st.Page("pages/employment.py", title="Employment", icon=":material/groups:")
+creative_self_employment = st.Page(
+    "pages/creative_self_employment.py",
+    title="Creative Self-Employment (Census 2021)",
+    icon=":material/person:",
+)
 turnover = st.Page("pages/turnover.py", title="Turnover", icon=":material/payments:")
 employment_bands = st.Page(
     "pages/employment_size_bands.py",
     title="Employment Size Bands",
     icon=":material/bar_chart:",
 )
-
-creative_self_employment = st.Page(
-    "pages/creative_self_employment.py",
-    title="Creative Self-Employment",
-    icon=":material/person:",
-)
-
 
 pg = st.navigation(
     {
@@ -42,9 +40,9 @@ pg = st.navigation(
             intensity,
             growth,
             employment,
+            creative_self_employment,
             turnover,
             employment_bands,
-            creative_self_employment
         ],
     }
 )
