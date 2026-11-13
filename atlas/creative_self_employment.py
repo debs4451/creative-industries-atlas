@@ -77,11 +77,9 @@ def render():
     measure = st.sidebar.selectbox("Employment category", COLUMNS, key="cse_metric")
     groups = sorted(df["Creative Occupation Group"].unique())
     chosen_groups = st.sidebar.multiselect("Creative occupation groups", groups, default=groups, key="cse_groups")
-    occupations = df[["SOC Code", "Occupation"]].drop_duplicates()
-    options = {f"{row['SOC Code']} · {row['Occupation']}": row["SOC Code"] for _,row in occupations.sort_values('SOC Code').iterrows()}
-    chosen_soc = st.sidebar.multiselect("SOC 2020 occupations", list(options), default=list(options), key="cse_soc")
-    selected_codes = [options[x] for x in chosen_soc]
-    filtered = df[df["SOC Code"].isin(selected_codes) & df["Creative Occupation Group"].isin(chosen_groups)].copy()
+    # Keep all 28 selected SOC 2020 occupations in the underlying dataset.
+    # The occupation-group control remains; there is no individual SOC filter.
+    filtered = df[df["Creative Occupation Group"].isin(chosen_groups)].copy()
 
     st.sidebar.markdown("---")
     st.sidebar.subheader("Geography")
@@ -93,7 +91,7 @@ def render():
     else:
         options_geo = sorted(filtered["MapLocation"].dropna().unique())
     if not options_geo:
-        st.warning("No creative occupation data match the selected SOC codes.")
+        st.warning("No data match the selected creative occupation groups.")
         st.stop()
     geo_choice = st.sidebar.selectbox("Area", options_geo, key="cse_area")
     selected = _filter_geography(filtered, kind, geo_choice)

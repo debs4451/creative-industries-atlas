@@ -138,23 +138,11 @@ def render():
     chosen_groups = st.sidebar.multiselect(
         "Creative occupation groups", groups, default=groups, key="cwa_groups",
     )
-    occupation_names = (
-        data[["SOC Code", "Occupation"]].drop_duplicates().sort_values("SOC Code")
-    )
-    soc_options = {
-        f"{row['SOC Code']} · {row['Occupation']}": row["SOC Code"]
-        for _, row in occupation_names.iterrows()
-    }
-    chosen_soc = st.sidebar.multiselect(
-        "SOC 2020 occupations", list(soc_options), default=list(soc_options), key="cwa_socs",
-    )
-    codes = {soc_options[x] for x in chosen_soc}
-    filtered = data[
-        data["SOC Code"].isin(codes)
-        & data["Creative Occupation Group"].isin(chosen_groups)
-    ].copy()
+    # Keep all 28 selected SOC 2020 occupations in the underlying dataset.
+    # The occupation-group control remains; there is no individual SOC filter.
+    filtered = data[data["Creative Occupation Group"].isin(chosen_groups)].copy()
     if filtered.empty:
-        st.warning("Select at least one creative occupation group and SOC code.")
+        st.warning("Select at least one creative occupation group.")
         st.stop()
 
     st.sidebar.markdown("---")
