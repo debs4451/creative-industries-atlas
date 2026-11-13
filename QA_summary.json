@@ -1,0 +1,10 @@
+{
+  "source": "ONS CT21_0217 Census 2021",
+  "geographies": 331,
+  "soc_codes": 28,
+  "rows": 9268,
+  "missing_or_absent_rows": 16,
+  "unmatched_regions": [],
+  "coverage": "England and Wales, residence-based",
+  "warning": "Selected creative occupations, not industry (SIC) employment."
+}
