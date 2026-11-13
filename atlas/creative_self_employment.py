@@ -60,8 +60,8 @@ def _filter_geography(df, kind, label):
 def render():
     inject_styles()
     st.markdown("<div class='atlas-kicker'>Creative Industries Atlas · Census 2021</div>", unsafe_allow_html=True)
-    st.title("Creative Self-Employment")
-    st.caption("Creative occupations (SOC 2020) · Local Authority of residence · England and Wales · 2021")
+    st.title("Creative Self-Employment (Census 2021)")
+    st.caption("ONS Census 2021 · Creative occupations (SOC 2020) · Local Authority of residence · England and Wales")
     st.info(
         "This measures people in selected **creative occupations**, including people who work "
         "outside SIC-defined Creative Industries. It is different from the workplace-based BRES Employment page."
@@ -143,12 +143,6 @@ def render():
     fig = px.bar(by_soc.dropna(subset=["Value"]).sort_values("Value",ascending=False), x="SOC", y="Value", color="Creative Occupation Group", labels={"Value":measure, "SOC":"Occupation (SOC 2020)"})
     fig.update_layout(xaxis_tickangle=-45,margin=dict(l=8,r=8,t=8,b=20),legend_title_text="Creative occupation group")
     st.plotly_chart(fig, use_container_width=True)
-
-    st.subheader("Original Census employment categories")
-    st.caption("Each column is kept separate. No self-employment totals, rates or modelled observations are added to the source data.")
-    table = selected[["Location", "MapLocation", "Nation", "SOC Code", "Occupation", "Creative Occupation Group",*COLUMNS]].sort_values(["MapLocation","SOC Code"])
-    st.dataframe(table, use_container_width=True, hide_index=True)
-    st.download_button("Download filtered Census observations (CSV)", data=table.to_csv(index=False).encode("utf-8-sig"), file_name="creative_self_employment_2021_filtered.csv", mime="text/csv")
 
     with st.expander("Source and methodology"):
         st.markdown(
