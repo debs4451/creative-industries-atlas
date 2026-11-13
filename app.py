@@ -27,6 +27,13 @@ employment_bands = st.Page(
     icon=":material/bar_chart:",
 )
 
+creative_self_employment = st.Page(
+    "pages/creative_self_employment.py",
+    title="Creative Self-Employment",
+    icon=":material/person:",
+)
+
+
 pg = st.navigation(
     {
         "Creative Industries Atlas": [home],
@@ -37,6 +44,7 @@ pg = st.navigation(
             employment,
             turnover,
             employment_bands,
+            creative_self_employment
         ],
     }
 )
