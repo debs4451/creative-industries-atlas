@@ -1,306 +1,275 @@
-"""Creative Education & Graduate Outcomes — Streamlit page for Creative Industries Atlas.
-Place in pages/creative_education_talent.py and CSV in data/ (or repository root).
-Optional: data/university_locations.csv columns UKPRN,Latitude,Longitude (plus optional City,Region).
-Do not interpret graduate employment as regional talent retention.
+"""Creative Education & Talent | Creative Industries Atlas
+Place in pages/creative_education_talent.py.
+Inputs in data/: creative_graduate_outcomes_with_computing.csv, university_locations.csv.
+All geography describes PROVIDER reference locations, not graduate jobs or residence.
 """
 from pathlib import Path
+import sys
 import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-st.set_page_config(page_title='Creative Education & Talent', page_icon='🎓', layout='wide')
-BASE=Path(__file__).resolve().parent.parent if Path(__file__).resolve().parent.name=='pages' else Path(__file__).resolve().parent
-DATA_NAME='creative_graduate_outcomes_with_computing.csv'
-SUBJECT_NAMES={
-    '11 Computing':'Computing',
-    '13 Architecture, building and planning':'Architecture, building & planning',
-    '24 Media, journalism and communications':'Media, journalism & communications',
-    '25 Design, and creative and performing arts':'Design, creative & performing arts',
+st.set_page_config(page_title="Creative Education & Talent", page_icon="🎓", layout="wide")
+ROOT = Path(__file__).resolve().parent.parent if Path(__file__).resolve().parent.name == 'pages' else Path(__file__).resolve().parent
+SUBJECTS = {
+    "11 Computing": "Computing",
+    "13 Architecture, building and planning": "Architecture, building & planning",
+    "24 Media, journalism and communications": "Media, journalism & communications",
+    "25 Design, and creative and performing arts": "Design, creative & performing arts",
 }
+EMPLOYED_ACTIVITIES = ['Full-time employment', 'Part-time employment', 'Unknown pattern of employment', 'Employment and further study']
+SOUTH_CENTRAL = {
+    'Basingstoke and Deane', 'Hart', 'Rushmoor', 'Test Valley', 'Winchester',
+    'Guildford', 'Waverley', 'Woking', 'Bournemouth', 'Poole', 'Christchurch',
+    'Bournemouth, Christchurch and Poole', 'BCP', 'Portsmouth', 'Southampton',
+    'Isle of Wight', 'East Hampshire', 'Eastleigh', 'Fareham', 'Gosport',
+    'Havant', 'New Forest'
+}
+NORTHERN_REGIONS = {'North East', 'North West', 'Yorkshire and The Humber', 'Yorkshire and the Humber'}
+COUNTRY_NAMES = {'Scotland': 'Scotland', 'Wales': 'Wales', 'Northern Ireland': 'Northern Ireland'}
 
-def locate(name):
-    for path in (BASE/'data'/name, BASE/name, BASE/'assets'/name):
-        if path.exists():return path
+def path_to(name):
+    for p in (ROOT / 'data' / name, ROOT / name, ROOT / 'assets' / name):
+        if p.exists():
+            return p
     return None
 
 @st.cache_data(show_spinner=False)
-def load_data(filepath):
-    df=pd.read_csv(filepath,dtype={'UKPRN':'string'},low_memory=False)
-    df['UKPRN']=df['UKPRN'].astype('string').str.replace(r'\.0$','',regex=True)
-    df['Number']=pd.to_numeric(df['Number'],errors='coerce').fillna(0)
-    df['Subject_label']=df['Subject'].map(SUBJECT_NAMES)
-    df=df[df['Subject_label'].notna() & df['Provider'].ne('Total') & df['UKPRN'].notna()].copy()
-    return df
+def read_outcomes(file):
+    d = pd.read_csv(file, dtype={'UKPRN': 'string'}, low_memory=False)
+    d['UKPRN'] = d['UKPRN'].str.replace(r'\.0$', '', regex=True)
+    d['Number'] = pd.to_numeric(d['Number'], errors='coerce').fillna(0)
+    d['Subject_label'] = d['Subject'].map(SUBJECTS)
+    return d[d['Subject_label'].notna() & d['UKPRN'].notna() & d['Provider'].ne('Total')].copy()
 
-st.title('🎓 Creative Education & Graduate Outcomes')
-st.caption('Source: HESA Graduate Outcomes, Table 28 | Academic years 2017/18–2023/24')
-st.info('This page maps the **institution where someone studied**, not where they subsequently work. Employment outcomes are not the same as local talent retention. Computing and Architecture are broad subject groups that also include non-creative courses.')
-path=locate(DATA_NAME)
-if path is None:
-    st.error(f'Cannot find {DATA_NAME}. Add it to your data/ folder or repository root.')
+@st.cache_data(show_spinner=False)
+def read_locations(file):
+    d = pd.read_csv(file, dtype={'UKPRN': 'string'})
+    d['UKPRN'] = d['UKPRN'].str.replace(r'\.0$', '', regex=True)
+    d = d.rename(columns={'latitude': 'Latitude', 'longitude': 'Longitude',
+                          'lat': 'Latitude', 'lon': 'Longitude', 'Local Authority': 'Local_Authority'})
+    for c in ['City', 'Region', 'Local_Authority', 'Provider']:
+        if c not in d:
+            d[c] = pd.NA
+    for c in ['Latitude', 'Longitude']:
+        d[c] = pd.to_numeric(d[c], errors='coerce') if c in d else float('nan')
+    d['Country'] = d['Region'].map(COUNTRY_NAMES)
+    d.loc[d['Region'].notna() & d['Country'].isna(), 'Country'] = 'England'
+    # An approximate reference city does not establish an individual London borough.
+    d['Local_Authority'] = d['Local_Authority'].astype('string')
+    d.loc[d['Region'].eq('London') & d['Local_Authority'].isna(), 'Local_Authority'] = 'London (borough not specified)'
+    return d.drop_duplicates('UKPRN')
+
+def get_ocn_local_authorities():
+    """Read the Atlas's existing exact OCN_ALL if accessible; never invent a list."""
+    for p in [ROOT, ROOT / 'pages']:
+        if str(p) not in sys.path:
+            sys.path.insert(0, str(p))
+    try:
+        from config import OCN_ALL
+        if isinstance(OCN_ALL, dict):
+            vals = []
+            for v in OCN_ALL.values():
+                if isinstance(v, (list, set, tuple)):
+                    vals.extend(v)
+                elif isinstance(v, str):
+                    vals.append(v)
+            return {str(v).strip().casefold() for v in vals}
+        if isinstance(OCN_ALL, (list, set, tuple)):
+            return {str(v).strip().casefold() for v in OCN_ALL}
+    except (ImportError, AttributeError, TypeError):
+        pass
+    return set()
+
+
+def make_summary(data, group_cols):
+    if data.empty:
+        return pd.DataFrame(columns=[*group_cols, 'Graduates', 'Respondents', 'Employed', 'Employment_pct_respondents'])
+    v = data.pivot_table(index=group_cols, columns='Activity', values='Number', aggfunc='sum', fill_value=0).reset_index()
+    for c in ['Total', 'Total with known outcomes', *EMPLOYED_ACTIVITIES]:
+        if c not in v:
+            v[c] = 0.
+    v['Graduates'] = v['Total']
+    v['Respondents'] = v['Total with known outcomes']
+    v['Employed'] = v[EMPLOYED_ACTIVITIES].sum(axis=1)
+    v['Employment_pct_respondents'] = 100 * v['Employed'].div(v['Respondents'].replace(0, float('nan')))
+    return v
+
+outpath, locpath = path_to('creative_graduate_outcomes_with_computing.csv'), path_to('university_locations.csv')
+st.title('🎓 Creative Education & Talent')
+st.caption('HESA Graduate Outcomes, 2017/18–2023/24 | Computing, Architecture, Media and Design / Performing Arts')
+st.info('Geography refers to the **university/provider location**, not where graduates work. These are **graduate employment outcomes**, not evidence of local talent retention. Computing and Architecture include some non-creative courses.')
+if outpath is None or locpath is None:
+    st.error('Missing files in data/: creative_graduate_outcomes_with_computing.csv and/or university_locations.csv')
     st.stop()
-df=load_data(str(path))
-years=sorted(df.Academic_year.dropna().unique().tolist())
-year=st.selectbox('Academic year',years,index=len(years)-1)
-subjects=st.multiselect('Subject groups',list(SUBJECT_NAMES.values()),default=list(SUBJECT_NAMES.values()))
-filtered=df[(df.Academic_year==year)&df.Subject_label.isin(subjects)]
-providers=sorted(filtered.Provider.dropna().unique().tolist())
-chosen=st.multiselect('Universities / higher education providers (optional)',providers)
-if chosen: filtered=filtered[filtered.Provider.isin(chosen)]
-if filtered.empty:
-    st.warning('No records for this selection.')
-    st.stop()
 
-# Each activity is exclusive. Do NOT sum published Total with activity sub-categories.
-pivot=filtered.pivot_table(index=['UKPRN','Provider','Subject_label'],columns='Activity',values='Number',aggfunc='sum',fill_value=0).reset_index()
-for col in ['Total','Total with known outcomes','Full-time employment','Part-time employment','Unknown pattern of employment','Employment and further study','Non-respondents','Unemployed']:
-    if col not in pivot:pivot[col]=0
-pivot['Employed']=pivot['Full-time employment']+pivot['Part-time employment']+pivot['Unknown pattern of employment']+pivot['Employment and further study']
-pivot['Known']=pivot['Total with known outcomes']
-pivot['Employment_pct_known']=pivot['Employed'].div(pivot['Known'].replace(0,float('nan')))*100
-pivot['Response_pct']=pivot['Known'].div(pivot['Total'].replace(0,float('nan')))*100
+df, locations = read_outcomes(str(outpath)), read_locations(str(locpath))
+all_years = sorted(df['Academic_year'].dropna().unique().tolist())
 
-# Caution: HESA rounds individual counts. Counts/rates calculated from them are approximate.
-total_grad=pivot['Total'].sum(); known=pivot['Known'].sum(); employed=pivot['Employed'].sum()
-a,b,c,d=st.columns(4)
-a.metric('Creative-related graduates',f'{total_grad:,.0f}')
-b.metric('Providers',f'{pivot.UKPRN.nunique():,}')
-c.metric('Employed among known outcomes',f'{100*employed/known:.1f}%' if known else 'N/A')
-d.metric('Known-outcome response',f'{100*known/total_grad:.1f}%' if total_grad else 'N/A')
-st.caption('Broad subject groups, not an estimate of creative-sector jobs. Percentages use respondents with known outcomes; published HESA counts are rounded.')
+# Filter sidebar — these controls apply to every chart, table and map.
+st.sidebar.header('🎓 Creative Education & Talent')
+st.sidebar.caption('All charts and the map use the geography and subject slicers below.')
+year = st.sidebar.selectbox('Academic year (single-year charts)', all_years, index=len(all_years)-1)
+subjects = st.sidebar.multiselect('Creative-related subject groups', list(SUBJECTS.values()), default=list(SUBJECTS.values()))
 
-st.subheader('Map of university locations')
-st.caption('Dots show approximate provider reference city/town centres, not verified campus or teaching locations. Several providers may share a pin.')
-locpath=locate('university_locations.csv')
-if locpath:
-    locations=pd.read_csv(locpath,dtype={'UKPRN':'string'})
-    locations['UKPRN']=locations['UKPRN'].str.replace(r'\.0$','',regex=True)
-    locations=locations.rename(columns={'latitude':'Latitude','longitude':'Longitude','lat':'Latitude','lon':'Longitude'})
-    if not {'Latitude','Longitude'}.issubset(locations.columns):
-        st.error('Locations CSV needs UKPRN, Latitude and Longitude columns.')
+countries = sorted(locations['Country'].dropna().unique().tolist())
+country = st.sidebar.selectbox('Country', ['All countries', *countries])
+geo = locations.copy()
+if country != 'All countries':
+    geo = geo[geo['Country'].eq(country)]
+regions = sorted(geo['Region'].dropna().unique().tolist())
+region = st.sidebar.selectbox('Region', ['All regions', *regions])
+if region != 'All regions':
+    geo = geo[geo['Region'].eq(region)]
+
+ocn_las = get_ocn_local_authorities()
+area = st.sidebar.selectbox('Distinct area', ['All areas', 'One Creative North', 'South Central'])
+if area == 'South Central':
+    geo = geo[geo['Local_Authority'].astype('string').str.strip().str.casefold().isin({s.casefold() for s in SOUTH_CENTRAL})]
+elif area == 'One Creative North':
+    if ocn_las:
+        geo = geo[geo['Local_Authority'].astype('string').str.strip().str.casefold().isin(ocn_las)]
     else:
-        p=pivot.groupby(['UKPRN','Provider'],as_index=False).agg(
-            Graduates=('Total','sum'), Known=('Known','sum'), Employed=('Employed','sum'))
-        p['Employment_pct_respondents'] = 100*p['Employed'].div(p['Known'].replace(0,float('nan')))
-        locations=locations.drop_duplicates('UKPRN')
-        show_all=st.toggle('Show all 405 providers, including those without graduate outcomes in the selected year',value=True)
-        map_metric=st.selectbox(
-            'Map indicator',
-            ['Graduates', 'Employed graduates', 'Employed (% of respondents)'],
-            help='The percentage is employed graduates divided by graduates with known outcomes (respondents), not all graduates.'
-        )
-        if show_all:
-            mapped=locations.copy()
-            mapped=mapped.merge(
-                p.drop(columns=['Provider']),on='UKPRN',how='left')
-            mapped['Provider']=mapped['Provider'].fillna('Unnamed provider')
-        else:
-            mapped=p.merge(locations.drop(columns=['Provider'],errors='ignore'),on='UKPRN',how='left')
-        for numeric_col in ['Graduates','Employed','Known']:
-            mapped[numeric_col]=pd.to_numeric(mapped[numeric_col],errors='coerce').fillna(0)
-        mapped['Employment_pct_respondents']=100*mapped['Employed'].div(mapped['Known'].replace(0,float('nan')))
-        if map_metric=='Graduates':
-            metric_col='Graduates'
-        elif map_metric=='Employed graduates':
-            metric_col='Employed'
-        else:
-            metric_col='Employment_pct_respondents'
-        mapped['Latitude']=pd.to_numeric(mapped.Latitude,errors='coerce')
-        mapped['Longitude']=pd.to_numeric(mapped.Longitude,errors='coerce')
-        mapped=mapped.dropna(subset=['Latitude','Longitude']).copy()
-        if mapped.empty:
-            st.warning('No coordinates found for the selected providers.')
-        else:
-            hover={'UKPRN':True,'Latitude':False,'Longitude':False,
-                   'Graduates':':,.0f','Employed':':,.0f',
-                   'Known':':,.0f','Employment_pct_respondents':':.1f'}
-            if 'City' in mapped.columns: hover['City']=True
-            # Fixed-size markers for percentage, so a small provider with a high rate
-            # is not visually mistaken for a large provider.
-            if map_metric=='Employed (% of respondents)':
-                fig=px.scatter_map(mapped,lat='Latitude',lon='Longitude',
-                                   color='Employment_pct_respondents',
-                                   color_continuous_scale='Viridis',range_color=(0,100),
-                                   hover_name='Provider',hover_data=hover,
-                                   zoom=4.5,center={'lat':54.6,'lon':-3.2},
-                                   map_style='open-street-map')
-                fig.update_traces(marker={'size':11,'opacity':0.85})
-                fig.update_layout(coloraxis_colorbar_title='Employed (%)')
-            else:
-                mapped['_marker_size']=mapped[metric_col].clip(lower=0)+1
-                fig=px.scatter_map(mapped,lat='Latitude',lon='Longitude',
-                                   size='_marker_size',hover_name='Provider',
-                                   hover_data=hover,zoom=4.5,
-                                   center={'lat':54.6,'lon':-3.2},
-                                   map_style='open-street-map',size_max=31)
-            fig.update_layout(height=570,margin=dict(l=0,r=0,t=0,b=0))
-            st.plotly_chart(fig,use_container_width=True)
-            st.caption(f'Showing {mapped.UKPRN.nunique()} provider points. Percentage uses known-outcome respondents; providers without responses have no rate. City-centre pins are approximate and can overlap.')
-else:
-    st.warning('University map needs data/university_locations.csv (UKPRN, Latitude, Longitude).')
+        # Clear regional proxy, never falsely claim exact OCN membership.
+        geo = geo[geo['Region'].isin(NORTHERN_REGIONS)]
+        st.sidebar.warning('Exact One Creative North LA list not found in config.py. Using North East, North West and Yorkshire & Humber as a provisional regional proxy.')
 
-# Regional and Local Authority comparisons are based on the provider reference city
-# in university_locations.csv, NOT on graduates' home/work locations or verified campuses.
-st.subheader('Creative graduates by region and Local Authority')
-st.caption(
-    'These charts assign graduates to the approximate location of their higher education provider, '
-    'not to where graduates live or work. They do not measure graduate retention. '
-    'Providers without a known location are excluded from these charts.'
-)
-if not locpath:
-    st.warning('Add data/university_locations.csv to enable the geographic charts.')
-elif not {'Region', 'Local_Authority'}.issubset(locations.columns):
-    st.warning('Update data/university_locations.csv to include Region and Local_Authority columns.')
-else:
-    geo_counts = p.merge(
-        locations[['UKPRN', 'Region', 'Local_Authority']].drop_duplicates('UKPRN'),
-        on='UKPRN', how='left'
-    )
-    region_counts = (
-        geo_counts.dropna(subset=['Region'])
-        .groupby('Region', as_index=False)
-        .agg(Graduates=('Graduates', 'sum'), Providers=('UKPRN', 'nunique'))
-        .sort_values('Graduates', ascending=True)
-    )
-    la_counts = (
-        geo_counts.dropna(subset=['Region', 'Local_Authority'])
-        .groupby(['Region', 'Local_Authority'], as_index=False)
-        .agg(Graduates=('Graduates', 'sum'), Providers=('UKPRN', 'nunique'))
-    )
-    # London is a region comprising multiple boroughs. City-centre coordinates
-    # cannot identify each provider's borough, so show a clearly labelled
-    # London-wide aggregate rather than omitting London from the dropdown.
-    london_unknown = geo_counts[
-        geo_counts['Region'].eq('London') & geo_counts['Local_Authority'].isna()
-    ]
-    if not london_unknown.empty:
-        london_row = pd.DataFrame([{
-            'Region': 'London',
-            'Local_Authority': 'London (borough not specified)',
-            'Graduates': london_unknown['Graduates'].sum(),
-            'Providers': london_unknown['UKPRN'].nunique(),
-        }])
-        la_counts = pd.concat([la_counts, london_row], ignore_index=True)
-    left_geo, right_geo = st.columns(2)
-    with left_geo:
-        st.markdown('**Graduates by provider region**')
-        if region_counts.empty:
-            st.info('No providers have a mapped region.')
-        else:
-            fig_region = px.bar(
-                region_counts, x='Graduates', y='Region', orientation='h',
-                hover_data=['Providers'],
-                labels={'Graduates': 'Graduates', 'Region': ''}
-            )
-            fig_region.update_layout(height=480, margin=dict(l=0,r=10,t=10,b=0))
-            st.plotly_chart(fig_region, use_container_width=True)
-    with right_geo:
-        st.markdown('**Graduates by provider Local Authority**')
-        region_options = ['All mapped regions'] + sorted(region_counts['Region'].dropna().unique().tolist())
-        selected_region = st.selectbox('Filter Local Authorities by region', region_options)
-        la_view = la_counts if selected_region == 'All mapped regions' else la_counts[la_counts['Region'] == selected_region]
-        top_n = st.slider('Number of Local Authorities', min_value=5, max_value=30, value=15, step=5)
-        if selected_region == 'London':
-            st.caption('London is currently grouped at regional level: individual boroughs have not been verified.')
-        la_view = la_view.nlargest(top_n, 'Graduates').sort_values('Graduates')
-        if la_view.empty:
-            st.info('No providers have a matched Local Authority in this selection.')
-        else:
-            fig_la = px.bar(
-                la_view, x='Graduates', y='Local_Authority', orientation='h',
-                hover_data=['Region', 'Providers'],
-                labels={'Graduates': 'Graduates', 'Local_Authority': ''}
-            )
-            fig_la.update_layout(height=480, margin=dict(l=0,r=10,t=10,b=0))
-            st.plotly_chart(fig_la, use_container_width=True)
-    st.caption(
-        f'Coverage: {geo_counts.dropna(subset=["Region"]).UKPRN.nunique()} of {p.UKPRN.nunique()} '
-        f'selected providers have a region; '
-        f'{geo_counts.dropna(subset=["Local_Authority"]).UKPRN.nunique()} have a Local Authority. '
-        'London providers without verified boroughs are shown as London (borough not specified), not as an individual Local Authority. '
-        'These administrative assignments are provisional and require provider-address verification.'
-    )
-    with st.expander('Download geography comparison tables'):
-        st.download_button('Regional totals (CSV)', region_counts.to_csv(index=False).encode(),
-                           file_name='creative_graduates_by_provider_region.csv', mime='text/csv')
-        st.download_button('Local Authority totals (CSV)', la_counts.to_csv(index=False).encode(),
-                           file_name='creative_graduates_by_provider_local_authority.csv', mime='text/csv')
+local_options = sorted(geo['Local_Authority'].dropna().unique().tolist())
+local_authorities = st.sidebar.multiselect('Local Authority', local_options)
+if local_authorities:
+    geo = geo[geo['Local_Authority'].isin(local_authorities)]
 
-left,right=st.columns(2)
+if country != 'All countries' or region != 'All regions' or area != 'All areas' or local_authorities:
+    st.caption('Geography filter active: providers without a verified Region/Local Authority may be omitted from comparisons.')
+
+# Provider filter follows selected geography and subjects across all years.
+visible_provider_ids = set(geo['UKPRN'].dropna())
+subject_df = df[df['Subject_label'].isin(subjects) & df['UKPRN'].isin(visible_provider_ids)].copy()
+provider_options = sorted(subject_df['Provider'].dropna().unique().tolist())
+providers = st.sidebar.multiselect('University / provider (optional)', provider_options)
+if providers:
+    subject_df = subject_df[subject_df['Provider'].isin(providers)]
+
+selected_ids = set(subject_df['UKPRN'].dropna())
+geo = geo[geo['UKPRN'].isin(selected_ids)].copy()
+this_year = subject_df[subject_df['Academic_year'].eq(year)].copy()
+summary = make_summary(this_year, ['UKPRN', 'Provider', 'Subject_label'])
+if summary.empty:
+    st.warning('No graduate records for the selected year and filters. Try a different year, subject or geography.')
+    st.stop()
+
+by_provider = summary.groupby(['UKPRN', 'Provider'], as_index=False)[['Graduates', 'Respondents', 'Employed']].sum()
+by_provider['Employment_pct_respondents'] = 100 * by_provider['Employed'].div(by_provider['Respondents'].replace(0, float('nan')))
+summary_geo = by_provider.merge(geo.drop(columns=['Provider'], errors='ignore'), on='UKPRN', how='left')
+grad = summary['Graduates'].sum(); respondents = summary['Respondents'].sum(); employed = summary['Employed'].sum()
+a, b, c, d = st.columns(4)
+a.metric('Graduates', f'{grad:,.0f}')
+b.metric('Respondents (known outcomes)', f'{respondents:,.0f}')
+c.metric('Employed', f'{employed:,.0f}')
+d.metric('Employed / respondents', f'{employed / respondents * 100:.1f}%' if respondents else 'N/A')
+st.caption(f'{len(by_provider):,} providers with outcomes in {year}. Figures are rounded by HESA; percentages are approximate.')
+
+st.subheader('University / provider map')
+show_all = st.toggle('Include selected providers without outcomes in the selected year', value=True)
+metric = st.selectbox('Map indicator', ['Graduates', 'Respondents', 'Employed', 'Employed (% of respondents)'])
+if show_all:
+    mapdata = geo.merge(by_provider.drop(columns=['Provider']), on='UKPRN', how='left')
+else:
+    mapdata = summary_geo.copy()
+mapdata['Provider'] = mapdata['Provider'].fillna('Unnamed provider')
+for c in ['Graduates', 'Respondents', 'Employed']:
+    mapdata[c] = pd.to_numeric(mapdata[c], errors='coerce').fillna(0)
+mapdata['Employment_pct_respondents'] = 100 * mapdata['Employed'].div(mapdata['Respondents'].replace(0, float('nan')))
+mapdata = mapdata.dropna(subset=['Latitude', 'Longitude'])
+if mapdata.empty:
+    st.info('No map points available for these filters.')
+else:
+    hover = {'City': True, 'Region': True, 'Local_Authority': True, 'Graduates': ':,.0f',
+             'Respondents': ':,.0f', 'Employed': ':,.0f', 'Employment_pct_respondents': ':.1f',
+             'Latitude': False, 'Longitude': False}
+    hover = {k:v for k,v in hover.items() if k in mapdata.columns}
+    if metric == 'Employed (% of respondents)':
+        fig = px.scatter_map(mapdata, lat='Latitude', lon='Longitude', color='Employment_pct_respondents',
+                             color_continuous_scale='Viridis', range_color=(0,100), hover_name='Provider',
+                             hover_data=hover, map_style='open-street-map', zoom=4.4, center={'lat':54.6,'lon':-3.2})
+        fig.update_traces(marker={'size': 11})
+    else:
+        mapdata['_size'] = mapdata[metric] + 1
+        fig = px.scatter_map(mapdata, lat='Latitude', lon='Longitude', size='_size', size_max=29,
+                             hover_name='Provider', hover_data=hover, map_style='open-street-map',
+                             zoom=4.4, center={'lat':54.6,'lon':-3.2})
+    fig.update_layout(height=540, margin=dict(l=0,r=0,t=0,b=0))
+    st.plotly_chart(fig, use_container_width=True)
+    st.caption(f'{mapdata.UKPRN.nunique():,} provider pins; approximate city/town-centre locations, not campuses. Multiple providers may share coordinates.')
+
+st.subheader('Geographic comparisons')
+geo_metric = st.selectbox('Measure for geographic charts', ['Graduates', 'Respondents', 'Employed', 'Employment_pct_respondents'],
+                          format_func=lambda x: 'Employed (% of respondents)' if x == 'Employment_pct_respondents' else x)
+left, right = st.columns(2)
 with left:
-    st.subheader('Graduates by subject')
-    bysubject=pivot.groupby('Subject_label',as_index=False)['Total'].sum().sort_values('Total',ascending=False)
-    st.plotly_chart(px.bar(bysubject,x='Total',y='Subject_label',orientation='h',labels={'Total':'Graduates','Subject_label':''}),use_container_width=True)
+    st.markdown('**By region**')
+    reg = summary_geo.dropna(subset=['Region']).groupby('Region', as_index=False)[['Graduates','Respondents','Employed']].sum()
+    reg['Employment_pct_respondents'] = 100 * reg['Employed'].div(reg['Respondents'].replace(0,float('nan')))
+    if reg.empty:
+        st.info('No classified regions in this selection.')
+    else:
+        reg = reg.sort_values(geo_metric)
+        st.plotly_chart(px.bar(reg,x=geo_metric,y='Region',orientation='h',hover_data=['Graduates','Respondents','Employed'],
+                               labels={'Region':'','Employment_pct_respondents':'Employed (%)'}), use_container_width=True)
 with right:
-    st.subheader('Institutions with most graduates')
-    byprovider=pivot.groupby('Provider',as_index=False)['Total'].sum().nlargest(15,'Total').sort_values('Total')
-    st.plotly_chart(px.bar(byprovider,x='Total',y='Provider',orientation='h',labels={'Total':'Graduates','Provider':''}),use_container_width=True)
+    st.markdown('**By Local Authority**')
+    las = summary_geo.dropna(subset=['Local_Authority']).groupby(['Region','Local_Authority'],dropna=False,as_index=False)[['Graduates','Respondents','Employed']].sum()
+    las['Employment_pct_respondents'] = 100 * las['Employed'].div(las['Respondents'].replace(0,float('nan')))
+    top_n = st.slider('Top Local Authorities', min_value=5, max_value=40, value=15, step=5)
+    if las.empty:
+        st.info('No Local Authority classification for this selection.')
+    else:
+        view = las.nlargest(top_n, geo_metric).sort_values(geo_metric)
+        st.plotly_chart(px.bar(view,x=geo_metric,y='Local_Authority',orientation='h',
+                               hover_data=['Region','Graduates','Respondents','Employed'],
+                               labels={'Local_Authority':'','Employment_pct_respondents':'Employed (%)'}),use_container_width=True)
+st.caption('The above charts group graduates by provider location, not workplace. Missing Local Authority assignments are excluded; London providers without verified boroughs are grouped as “London (borough not specified)”.')
 
-st.subheader('Graduates vs employed — selected academic year')
-st.caption('Employed includes full-time, part-time, unknown work pattern, and employment with further study. Graduates includes non-respondents, so these bars measure different populations.')
-comparison=(pivot.groupby('Subject_label',as_index=False)
-            .agg(Graduates=('Total','sum'), Employed=('Employed','sum')))
-if not comparison.empty:
-    comparison_long=comparison.melt(id_vars='Subject_label',
-                                    value_vars=['Graduates','Employed'],
-                                    var_name='Measure',value_name='People')
-    fig_comparison=px.bar(comparison_long,x='Subject_label',y='People',color='Measure',
-                          barmode='group',labels={'Subject_label':'Subject group','People':'People'},
-                          category_orders={'Subject_label':list(SUBJECT_NAMES.values())})
-    fig_comparison.update_layout(xaxis_tickangle=-15,legend_title_text='',height=470)
-    st.plotly_chart(fig_comparison,use_container_width=True)
+st.subheader('Graduates, respondents and employed — selected year')
+subj = summary.groupby('Subject_label', as_index=False)[['Graduates','Respondents','Employed']].sum()
+long_subj = subj.melt('Subject_label',value_vars=['Graduates','Respondents','Employed'],var_name='Measure',value_name='People')
+st.plotly_chart(px.bar(long_subj,x='Subject_label',y='People',color='Measure',barmode='group',
+                       labels={'Subject_label':'Subject','People':'People'}),use_container_width=True)
 
 st.subheader('Employment trends across academic years')
-st.caption('All years use the same selected subjects and optional providers. The year selector above applies to the map and other single-year charts, not this historical comparison.')
-trend_source=df[df.Subject_label.isin(subjects)]
-if chosen:
-    trend_source=trend_source[trend_source.Provider.isin(chosen)]
-# Activity categories are mutually exclusive; do not add Total/Known to their components.
-trend_activity=trend_source.groupby(['Academic_year','Activity'],as_index=False)['Number'].sum()
-trend_wide=trend_activity.pivot(index='Academic_year',columns='Activity',values='Number').fillna(0)
-for col in ['Total','Total with known outcomes','Full-time employment','Part-time employment',
-            'Unknown pattern of employment','Employment and further study']:
-    if col not in trend_wide.columns: trend_wide[col]=0
-trend_wide['Graduates']=trend_wide['Total']
-trend_wide['Respondents']=trend_wide['Total with known outcomes']
-trend_wide['Employed']=(trend_wide['Full-time employment']+trend_wide['Part-time employment']+
-                        trend_wide['Unknown pattern of employment']+trend_wide['Employment and further study'])
-trend_wide['Employment_pct_respondents']=100*trend_wide['Employed'].div(trend_wide['Respondents'].replace(0,float('nan')))
-trend_wide=trend_wide.reset_index().sort_values('Academic_year')
-tr_left,tr_right=st.columns(2)
-with tr_left:
-    st.markdown('**Graduates and employed graduates by year**')
-    long_trend=trend_wide.melt(id_vars='Academic_year',value_vars=['Graduates','Employed'],
-                               var_name='Measure',value_name='People')
-    fig_counts=px.line(long_trend,x='Academic_year',y='People',color='Measure',markers=True,
-                       labels={'Academic_year':'Academic year','People':'Graduates / employed graduates'})
-    fig_counts.update_layout(legend_title_text='',height=425)
-    st.plotly_chart(fig_counts,use_container_width=True)
-with tr_right:
-    st.markdown('**Employment as a percentage of respondents**')
-    fig_rate=px.line(trend_wide,x='Academic_year',y='Employment_pct_respondents',markers=True,
+st.caption('All years, with the same country, region, distinct area, Local Authority, subject and provider filters. The single-year selector affects the map and comparison charts above.')
+trend = make_summary(subject_df, ['Academic_year'])
+trend = trend.sort_values('Academic_year')
+col1,col2 = st.columns(2)
+with col1:
+    st.markdown('**Graduates, respondents and employed graduates by year**')
+    long_trend = trend.melt('Academic_year',value_vars=['Graduates','Respondents','Employed'],var_name='Measure',value_name='People')
+    st.plotly_chart(px.line(long_trend,x='Academic_year',y='People',color='Measure',markers=True,
+                            labels={'Academic_year':'Academic year','People':'People'}),use_container_width=True)
+with col2:
+    st.markdown('**Employment as % of respondents**')
+    fig_rate=px.line(trend,x='Academic_year',y='Employment_pct_respondents',markers=True,
                      labels={'Academic_year':'Academic year','Employment_pct_respondents':'Employed (% of respondents)'})
-    fig_rate.update_traces(hovertemplate='%{x}<extra></extra><br>Employed: %{y:.1f}%')
-    fig_rate.update_layout(yaxis_range=[0,100],height=425)
+    fig_rate.update_layout(yaxis_range=[0,100])
     st.plotly_chart(fig_rate,use_container_width=True)
-with st.expander('View / download annual employment figures'):
-    st.dataframe(trend_wide[['Academic_year','Graduates','Respondents','Employed','Employment_pct_respondents']]
-                 .rename(columns={'Academic_year':'Academic year',
-                                  'Employment_pct_respondents':'Employed (% of respondents)'}),
-                 hide_index=True,use_container_width=True)
-    st.download_button('Download employment trends (CSV)',
-                       trend_wide.to_csv(index=False).encode('utf-8'),
-                       file_name='creative_graduate_employment_trends.csv',mime='text/csv')
 
-st.subheader('Detailed provider and subject results')
-cols=['Provider','Subject_label','Total','Known','Employed','Employment_pct_known','Response_pct']
-st.dataframe(pivot[cols].rename(columns={'Subject_label':'Subject','Total':'Graduates','Known':'Known outcomes','Employment_pct_known':'Employment among known outcomes (%)','Response_pct':'Known-outcome response (%)'}).sort_values('Graduates',ascending=False),use_container_width=True,hide_index=True)
-st.download_button('Download filtered provider results',data=pivot.to_csv(index=False).encode('utf-8'),file_name=f'creative_graduate_providers_{year.replace("/","-")}.csv',mime='text/csv')
-with st.expander('Methodology and limitations'):
-    st.markdown('''- HESA Table 28, academic years 2017/18–2023/24. Includes subject groups 11, 13, 24 and 25.
-- Uses **All qualifications**, **All modes** and **Exclude significant interim study** to avoid counting overlapping subtotals.
-- Creative classification is intentionally broad: Computing includes non-creative computing degrees; Architecture includes building and planning.
-- Employment includes full-time, part-time, unknown pattern and employment with further study. Denominator is graduates with known outcomes.
-- Figures are rounded by HESA; calculated sums and percentages are approximate.
-- **Not a regional retention metric:** provider geography is not graduate workplace geography. Calculating retention requires matched study and workplace geography, ideally by subject and cohort.
-- If a provider has multiple campuses, the provider pin does not establish the campus where a graduate studied.\n- The Region/Local Authority categories come from provisional provider-city assignments, not verified provider or campus locations; London boroughs are not inferred from a London-wide point. Geographic charts are limited to providers with assigned locations.''')
+with st.expander('Annual employment figures / download'):
+    cols=['Academic_year','Graduates','Respondents','Employed','Employment_pct_respondents']
+    st.dataframe(trend[cols],hide_index=True,use_container_width=True)
+    st.download_button('Download annual trends', trend[cols].to_csv(index=False).encode(),
+                       file_name='creative_education_employment_trends.csv',mime='text/csv')
+
+st.subheader('Universities / providers')
+provider_rows=summary_geo[['Provider','City','Region','Local_Authority','Graduates','Respondents','Employed','Employment_pct_respondents']].sort_values('Graduates',ascending=False)
+st.dataframe(provider_rows,hide_index=True,use_container_width=True)
+st.download_button('Download selected provider outcomes',provider_rows.to_csv(index=False).encode(),
+                   file_name='creative_education_provider_results.csv',mime='text/csv')
+
+with st.expander('Definitions and caveats'):
+    st.markdown('''- **Graduates**: HESA published total in selected subject groups. **Respondents**: graduates with known outcomes. **Employed**: full-time, part-time, unknown pattern, or employment alongside further study. The categories are not added twice.
+- **Employed (% of respondents)** = employed / respondents × 100, not employed / all graduates.
+- Uses HESA Table 28: all qualifications, all study modes, and the exclusion of significant interim study. Values are rounded.
+- The **distinct area** selector filters providers located within the selected area, not graduates residing or working there. South Central uses the Atlas's supplied geography, including the combined Bournemouth, Christchurch and Poole authority.
+- If `OCN_ALL` is available in `config.py`, One Creative North uses those Local Authorities. Otherwise it uses a *provisional northern-region proxy* with an explicit warning.
+- Only providers with assigned regions or authorities appear in those corresponding slicers/charts. No inferred London boroughs.
+- Geographic points are approximate reference city centres and must not be interpreted as exact campus locations. Employment outcomes do **not** establish talent retention.''')
