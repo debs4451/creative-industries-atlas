@@ -1,6 +1,6 @@
 # Add Creative Workforce by Age (Census 2021) to the existing Creative Industries Atlas
 
-This is an **additive Streamlit + Pydeck page**. It does not modify any of your existing indicator calculations or visualisations.
+This is an **additive Streamlit + Pydeck page**. It does not modify your other indicator calculations or visualisations. This package contains the most recent age-page code with the **individual SOC occupation selector removed**, plus a small home-page change: **Creative Self-Employment displays the briefcase icon 💼**, not 🧑‍💼. The app.py sidebar navigation icon is also changed to the matching Material work/briefcase icon.
 
 ## 1) Upload the new files to your GitHub repository
 
@@ -15,7 +15,7 @@ Copy the contents of the ZIP to the **same relative paths** in your repository:
 | `data/creative_workforce_age_census2021.csv.gz` | Real ONS Census 2021 age counts, filtered to 28 selected creative SOC codes |
 | `data/creative_soc2020_selection.csv` | The same 28-code selection used for Self-Employment; only replace if your copy is different |
 
-The ZIP also includes ready-edited `app.py` and `pages/home.py` based on the latest Creative Self-Employment homepage update. **If you have made newer edits to these two files, do not overwrite them wholesale.** Apply the changes below instead.
+The ZIP also includes ready-edited `app.py` and `pages/home.py` based on the latest Creative Self-Employment homepage update. **If you have made newer edits to these two files, do not overwrite them wholesale.** Apply the changes below and change the Creative Self-Employment home icon to `💼` (in `pages/home.py`) and optionally the sidebar icon to `:material/work:` (in `app.py`).
 
 ## 2) Register the page in `app.py`
 
@@ -73,3 +73,12 @@ Open the Home page. The indicator should appear below Creative Self-Employment. 
 - Confirmed South Central has **18** current area records and One Creative North **60** current area records.
 - Successfully ran the data filters, geography aggregation, TopoJSON-to-GeoJSON map, chart construction and full page rendering with mocked Streamlit/Pydeck frontends. Python syntax compilation passed.
 - **Not tested on the live Streamlit Cloud deployment.** If a module import fails after deployment, check that the files were uploaded under the exact paths above.
+
+## Requested small changes in this build
+
+- `pages/home.py`: Creative Self-Employment home link uses `icon="💼"` (briefcase only).
+- `app.py`: Creative Self-Employment navigation icon uses `:material/work:`.
+- `atlas/creative_workforce_age.py`: **no individual SOC 2020 occupation selector**; the 28 selected SOC codes remain included in the source data. Creative occupation **group** filter remains.
+- Age page: **no bottom data table** or CSV download widget.
+
+If the repository already includes other recent homepage links, copy the new age page link and the briefcase icon line rather than overwriting the homepage wholesale.

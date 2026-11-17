@@ -23,7 +23,7 @@ employment = st.Page("pages/employment.py", title="Employment", icon=":material/
 creative_self_employment = st.Page(
     "pages/creative_self_employment.py",
     title="Creative Self-Employment (Census 2021)",
-    icon=":material/person:",
+    icon=":material/work:",
 )
 creative_workforce_age = st.Page(
     "pages/creative_workforce_age.py",
