@@ -48,7 +48,11 @@ with c1:
         label="Employment Size Bands",
         icon="📊",
     )
-
+st.page_link(
+    "pages/creative_education_talent.py",
+    label="Creative Education & Talent",
+    icon="🎓",
+)
 with c2:
     st.subheader("Geography")
     st.markdown(
