@@ -39,7 +39,7 @@ with c1:
     st.page_link(
         "pages/creative_self_employment.py",
         label="Creative Self-Employment (Census 2021)",
-        icon="🧑‍💼",
+        icon="💼",
     )
     st.page_link("pages/creative_workforce_age.py", label="Creative Workforce by Age (Census 2021)", icon="📅")
     st.page_link("pages/turnover.py", label="Turnover", icon="💷")
