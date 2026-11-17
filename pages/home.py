@@ -48,7 +48,7 @@ with c1:
         label="Employment Size Bands",
         icon="📊",
     )
-st.page_link(
+    st.page_link(
     "pages/creative_education_talent.py",
     label="Creative Education & Talent",
     icon="🎓",
