@@ -36,7 +36,11 @@ employment_bands = st.Page(
     title="Employment Size Bands",
     icon=":material/bar_chart:",
 )
-
+creative_education_talent = st.Page(
+    "pages/creative_education_talent.py",
+    title="Creative Education & Talent",
+    icon="🎓",
+)
 pg = st.navigation(
     {
         "Creative Industries Atlas": [home],
@@ -47,6 +51,7 @@ pg = st.navigation(
             employment,
             creative_self_employment,
             creative_workforce_age,
+            creative_education_talent,
             turnover,
             employment_bands,
         ],
