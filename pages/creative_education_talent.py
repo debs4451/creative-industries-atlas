@@ -80,7 +80,11 @@ if locpath:
     else:
         p=pivot.groupby(['UKPRN','Provider'],as_index=False).agg(Graduates=('Total','sum'),Known=('Known','sum'),Employed=('Employed','sum'))
         locations=locations.drop_duplicates('UKPRN')
-        geo=p.merge(locations,on='UKPRN',how='left')
+       geo = p.merge(
+    locations.drop(columns=["Provider"], errors="ignore"),
+    on="UKPRN",
+    how="left"
+)
         geo['Latitude']=pd.to_numeric(geo.Latitude,errors='coerce')
         geo['Longitude']=pd.to_numeric(geo.Longitude,errors='coerce')
         mapped=geo.dropna(subset=['Latitude','Longitude']).copy()
